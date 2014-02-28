@@ -1,0 +1,18 @@
+-cp basicExporter
+--each
+
+
+-main BasicExporter
+-cp sketchApi
+-lib erazor
+-lib polygonal-ds
+-js basicExporter/out/basicExporter.jstalk
+#-D haxeJSON
+-dce no
+
+--next
+
+-x CopyPlug
+
+
+
