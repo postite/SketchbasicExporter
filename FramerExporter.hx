@@ -4,7 +4,8 @@ using helpers.Document;
 import de.polygonal.ds.TreeNode;
 import de.polygonal.ds.TreeBuilder;
 import exp.*;
-
+import haxe.EnumFlags;
+import exp.Behave;
 
 typedef Sketch=Array<PageType>
 
@@ -54,7 +55,24 @@ class FramerExporter{
 
 	public function new()
 	{
-		
+		exp.ExportFactory.extract=function(name:String){
+			var flags=new EnumFlags();
+		//trace("first="+beginWith(name));
+		//return true;
+
+		 switch(exp.ExportFactory.beginWith(name)){
+		 
+		// case "#": flags.set(Behave.set);
+		 case '_': flags.set(Flat);
+		 case "+": flags.set(Exportable);
+		 //case "_":flags.set(Flat);
+		 case _:flags.unset(Behave.Exportable);
+
+		 //default:  false;
+		 }
+		 return flags;
+
+		}
 	}
 
 	public function toJson(tree:TreeNode<Exportable>,obj:Dynamic)

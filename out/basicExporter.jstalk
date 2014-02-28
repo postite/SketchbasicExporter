@@ -236,6 +236,21 @@ EReg.prototype = {
 	,__class__: EReg
 };
 var FramerExporter = function() {
+	exp.ExportFactory.extract = function(name) {
+		var flags = 0;
+		var _g = exp.ExportFactory.beginWith(name);
+		switch(_g) {
+		case "_":
+			flags |= 1 << exp.Behave.Flat[1];
+			break;
+		case "+":
+			flags |= 1 << exp.Behave.Exportable[1];
+			break;
+		default:
+			flags &= 268435455 - (1 << exp.Behave.Exportable[1]);
+		}
+		return flags;
+	};
 };
 FramerExporter.__name__ = true;
 FramerExporter.prototype = {
