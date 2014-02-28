@@ -1,0 +1,14 @@
+
+-main BasicExporter
+-lib sketchApi
+-lib erazor
+-lib polygonal-ds
+-js out/basicExporter.jstalk
+-dce full
+
+--next
+
+-x InstallPlug
+
+
+

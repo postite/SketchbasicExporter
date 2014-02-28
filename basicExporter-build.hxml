@@ -8,7 +8,7 @@
 -lib polygonal-ds
 -js basicExporter/out/basicExporter.jstalk
 #-D haxeJSON
--dce no
+-dce full
 
 --next
 
