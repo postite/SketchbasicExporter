@@ -53,6 +53,8 @@ class BasicExporter
 			ArtboardsLoop(cast page.artboards());
 			
 		}
+
+
 		//log(tree.toString());
 		log("xml");
 		try{
@@ -65,35 +67,36 @@ class BasicExporter
 		}catch(msg:Dynamic){
 		log("xml error"+msg);
 		}
-		log("html");
-		try{
+		// log("html");
+		// try{
 		
-		var xml:Xml=Xml.createElement("div");
-		var html=new HTMLExporter();
-		html.toHtml(tree,xml);
-		html.export();
+		// var xml:Xml=Xml.createElement("div");
+		// var html=new HTMLExporter();
+		// html.toHtml(tree,xml);
+		// html.export();
 		
-		}catch(msg:Dynamic){
-		log("xml error"+msg);
-		}
-		log("json");
+		// }catch(msg:Dynamic){
+		// log("xml error"+msg);
+		// }
+		log("jason");
 		try{
 			var obj={};
 			var jon=toJson(tree,obj);
+			//log(jon.toString());
 			log(haxe.Json.stringify(jon));
 			exportjson( haxe.Json.stringify(jon));
 		}
-		catch(msg:Dynamic){
-			log("error"+msg);
-		}
-		try{
-			var obj={};
-			var framer= new FramerExporter();
-			var jsonframe=framer.toJson(tree,obj);
-			exportFramer( haxe.Json.stringify(jsonframe));
-		}catch(msg:Dynamic){
-			log("error for framer"+msg);
-		}
+		// catch(msg:Dynamic){
+		// 	log("error"+msg);
+		// }
+		// try{
+		// 	var obj={};
+		// 	var framer= new FramerExporter();
+		// 	var jsonframe=framer.toJson(tree,obj);
+		// 	exportFramer( haxe.Json.stringify(jsonframe));
+		// }catch(msg:Dynamic){
+		// 	log("error for framer"+msg);
+		// }
 
 		//log( xm.firstChild().nodeName);
 		log("done");
@@ -207,21 +210,25 @@ class BasicExporter
 		}
 		return xml;
 	}
+
+
+	
 	function toJson(tree:TreeNode<Exportable>,obj:Dynamic)
 	{
 		if( obj.children==null)obj.children=[];
 		for (node in tree.childIterator()){
+
 			var treeNode=tree.find(node); //heavy
-			//var _node=Xml.createElement("div");
-			 obj.children.push(node.toObj());
-			// _node.name=node.name;
+			var _obj=node.toObj();
+			obj.children.push(_obj);
+			
 			// //pattern matching ?
 			switch(node.type){
 				case _:
 			}
-			//xml.insertChild(_node,0);
+			
 			if (treeNode.hasChildren()){
-				toJson(treeNode,obj);
+				toJson(treeNode,_obj);
 			}
 		}
 		return obj;
@@ -234,10 +241,10 @@ class BasicExporter
 	{
 		Global.writeToFile(content,doc.dir()+"/view/"+doc.displayName()+".json");
 	}
-	function exportFramer(content:String)
-	{
-		Global.writeToFile(content,doc.dir()+"/view/framer-"+doc.displayName()+".json");
-	}
+	// function exportFramer(content:String)
+	// {
+	// 	Global.writeToFile(content,doc.dir()+"/view/framer-"+doc.displayName()+".json");
+	// }
 
 
 	static public function main()

@@ -55,24 +55,17 @@ class FramerExporter{
 
 	public function new()
 	{
-		exp.ExportFactory.extract=function(name:String){
-			var flags=new EnumFlags();
-		//trace("first="+beginWith(name));
-		//return true;
+		// exp.ExportFactory.extract=function(name:String){
+		//  var flags=new EnumFlags();
 
-		 switch(exp.ExportFactory.beginWith(name)){
-		 
-		// case "#": flags.set(Behave.set);
-		 case '_': flags.set(Flat);
-		 case "+": flags.set(Exportable);
-		 //case "_":flags.set(Flat);
-		 case _:flags.unset(Behave.Exportable);
+		//  switch(exp.ExportFactory.beginWith(name)){
+		//  case '_': flags.set(Flat);
+		//  case "+": flags.set(Exportable);		 
+		//  case _:flags.set(Behave.Exportable);		 
+		//  }
+		//  return flags;
 
-		 //default:  false;
-		 }
-		 return flags;
-
-		}
+		// }
 	}
 
 	public function toJson(tree:TreeNode<Exportable>,obj:Dynamic)
@@ -125,7 +118,7 @@ class FramerExporter{
 			}
 			
 			obj.children.push(layer);
-			//xml.insertChild(_node,0);
+			
 			if (treeNode.hasChildren()){
 				toJson(treeNode,layer);
 			}

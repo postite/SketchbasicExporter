@@ -4,6 +4,8 @@ using helpers.Document;
 import de.polygonal.ds.TreeNode;
 import de.polygonal.ds.TreeBuilder;
 import exp.*;
+import haxe.EnumFlags;
+import exp.Behave;
 
 class HTMLExporter
 {
