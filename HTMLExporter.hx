@@ -40,6 +40,11 @@ class HTMLExporter
 					_node.set("class","page");
 				case ArtBoard:
 					_node.set("class","artboard");
+				case Svg:
+					_node.set("class","svg");
+					var img=Xml.createElement("img");
+					img.set("src",node.src);
+					_node.insertChild(img,0);
 				case Text:
 					 _node.set("class","text");
 					 position="relative";

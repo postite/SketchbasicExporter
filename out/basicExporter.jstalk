@@ -22,7 +22,7 @@ var BasicExporter = function() {
 		var page = $it0.next();
 		Global.doc.setCurrentPage(page);
 		var _this = this.builder;
-		var x = exp.ExportFactory.create(page);
+		var x = exp.ExportFactory.create(page)["export"]();
 		_this._child = new de.polygonal.ds.TreeNode(x,_this._node);
 		_this._child;
 		var m = indent + page.name();
@@ -39,12 +39,30 @@ var BasicExporter = function() {
 		var m = "xml error" + Std.string(msg);
 		log(m);
 	}
+	log("html");
+	try {
+		var xml = Xml.createElement("div");
+		var html = new HTMLExporter();
+		html.toHtml(this.tree,xml);
+		html["export"]();
+	} catch( msg ) {
+		var m = "xml error" + Std.string(msg);
+		log(m);
+	}
 	log("jason");
 	var obj = { };
 	var jon = this.toJson(this.tree,obj);
 	var m = JSON.stringify(jon);
 	log(m);
 	this.exportjson(JSON.stringify(jon));
+	try {
+		var framer = new FramerExporter();
+		var jsonframe = framer.toJson(this.tree);
+		this.exportFramer(JSON.stringify(jsonframe));
+	} catch( msg ) {
+		var m = "error for framer" + Std.string(msg);
+		log(m);
+	}
 	log("done");
 };
 $hxClasses["BasicExporter"] = BasicExporter;
@@ -71,7 +89,7 @@ BasicExporter.prototype = {
 			var art = native[_g];
 			++_g;
 			var _this = this.builder;
-			var x = exp.ExportFactory.create(art);
+			var x = exp.ExportFactory.create(art)["export"]();
 			_this._child = new de.polygonal.ds.TreeNode(x,_this._node);
 			_this._child;
 			var m = indent + art.name();
@@ -101,10 +119,10 @@ BasicExporter.prototype = {
 			++_g;
 			var exported = exp.ExportFactory.create(layer)["export"]();
 			var m = "------------layer---------------" + layer.name();
-			var p = { fileName : "BasicExporter.hx", lineNumber : 130, className : "BasicExporter", methodName : "bigloop"};
+			var p = { fileName : "BasicExporter.hx", lineNumber : 134, className : "BasicExporter", methodName : "bigloop"};
 			log(p.className + " " + p.lineNumber + "  " + Std.string(m));
 			if(exported != null) {
-				var p = { fileName : "BasicExporter.hx", lineNumber : 132, className : "BasicExporter", methodName : "bigloop"};
+				var p = { fileName : "BasicExporter.hx", lineNumber : 136, className : "BasicExporter", methodName : "bigloop"};
 				log(p.className + " " + p.lineNumber + "  " + Std.string("---------------------------" + exported.name));
 				var _this = this.builder;
 				_this._child = new de.polygonal.ds.TreeNode(exported,_this._node);
@@ -129,7 +147,7 @@ BasicExporter.prototype = {
 			castednode = js.Boot.__cast(node , exp.ExportLayer);
 			var treeNode = tree.find(node);
 			var _node = null;
-			var p = { fileName : "BasicExporter.hx", lineNumber : 171, className : "BasicExporter", methodName : "toXml"};
+			var p = { fileName : "BasicExporter.hx", lineNumber : 175, className : "BasicExporter", methodName : "toXml"};
 			log(p.className + " " + p.lineNumber + "  " + Std.string(node.type));
 			var _g = node.type;
 			switch(_g[1]) {
@@ -155,13 +173,19 @@ BasicExporter.prototype = {
 				_node.set("class","text");
 				_node.insertChild(Xml.createCData((js.Boot.__cast(node , exp.ExportText)).text.text),0);
 				break;
+			case 4:
+				_node.set("class","svg");
+				var img = Xml.createElement("img");
+				img.set("src",node.src);
+				_node.insertChild(img,0);
+				break;
 			case 3:
 				_node.set("class","image");
 				var img = Xml.createElement("img");
 				img.set("src",node.src);
 				_node.insertChild(img,0);
 				break;
-			case 4:
+			case 5:
 				_node.set("class","container");
 				break;
 			}
@@ -185,6 +209,11 @@ BasicExporter.prototype = {
 	}
 	,exportjson: function(content) {
 		var path = helpers.Document.dir(Global.doc) + "/view/" + Global.doc.displayName() + ".json";
+		var nsContent = NSString.stringWithString(content);
+		nsContent.writeToFile_atomically(path,false);
+	}
+	,exportFramer: function(content) {
+		var path = helpers.Document.dir(Global.doc) + "/view/framer-" + Global.doc.displayName() + ".json";
 		var nsContent = NSString.stringWithString(content);
 		nsContent.writeToFile_atomically(path,false);
 	}
@@ -272,6 +301,80 @@ EReg.prototype = {
 	}
 	,__class__: EReg
 };
+var FramerExporter = function() {
+};
+$hxClasses["FramerExporter"] = FramerExporter;
+FramerExporter.__name__ = ["FramerExporter"];
+FramerExporter.prototype = {
+	id: null
+	,sketch: null
+	,toJson: function(tree,obj) {
+		var $it0 = tree.childIterator();
+		while( $it0.hasNext() ) {
+			var node = $it0.next();
+			var treeNode = tree.find(node);
+			var layer = { };
+			var _node;
+			_node = js.Boot.__cast(node , exp.ExportLayer);
+			layer.id = ++this.id;
+			layer.name = _node.name;
+			var layerframe = { };
+			var m = "height=" + _node.height + " type=" + Std.string(_node.type) + " visible=" + Std.string(_node.visible);
+			var p = { fileName : "FramerExporter.hx", lineNumber : 84, className : "FramerExporter", methodName : "toJson"};
+			log(p.className + " " + p.lineNumber + "  " + Std.string(m));
+			layerframe.height = _node.height;
+			layerframe.width = _node.width;
+			layerframe.x = _node.relx;
+			layerframe.y = _node.rely;
+			layerframe.rotation = 0;
+			layer.layerFrame = layerframe;
+			layer.maskFrame = null;
+			layer.imageType = null;
+			layer.image = null;
+			layer.text = null;
+			layer.visible = _node.visible;
+			layer.children = [];
+			var _g = node.type;
+			switch(_g[1]) {
+			case 3:
+				var image = { };
+				var frame = { };
+				frame.x = _node.relx;
+				frame.y = _node.rely;
+				frame.width = _node.width;
+				frame.height = _node.height;
+				image.frame = frame;
+				image.path = _node.src;
+				layer.imageType = "png";
+				layer.image = image;
+				break;
+			case 4:
+				var image = { };
+				var frame = { };
+				frame.x = _node.relx;
+				frame.y = _node.rely;
+				frame.width = _node.width;
+				frame.height = _node.height;
+				image.frame = frame;
+				image.path = _node.src;
+				layer.imageType = "svg";
+				layer.image = image;
+				break;
+			case 2:
+				layer.text = node.toObject();
+				break;
+			default:
+			}
+			if(obj == null) {
+				obj = [];
+				obj.push(layer);
+			} else if(_node.type == exp.ExportTypes.Page) obj.push(layer); else obj.children.push(layer);
+			if(treeNode.children != null) this.toJson(treeNode,layer);
+		}
+		return obj;
+	}
+	,__class__: FramerExporter
+};
 var Global = function() {
 };
 $hxClasses["Global"] = Global;
@@ -293,6 +396,114 @@ Global.writeToFile = function(content,path,atomically) {
 Global.prototype = {
 	__class__: Global
 };
+var HTMLExporter = function() {
+};
+$hxClasses["HTMLExporter"] = HTMLExporter;
+HTMLExporter.__name__ = ["HTMLExporter"];
+HTMLExporter.prototype = {
+	html: null
+	,toHtml: function(tree,xml) {
+		var $it0 = tree.childIterator();
+		while( $it0.hasNext() ) {
+			var node = $it0.next();
+			var castednode;
+			castednode = js.Boot.__cast(node , exp.ExportLayer);
+			var treeNode = tree.find(node);
+			var _node = null;
+			var p = { fileName : "HTMLExporter.hx", lineNumber : 27, className : "HTMLExporter", methodName : "toHtml"};
+			log(p.className + " " + p.lineNumber + "  " + Std.string(node.type));
+			var _g = node.type;
+			switch(_g[1]) {
+			case 0:
+				_node = Xml.createElement("section");
+				break;
+			default:
+				_node = Xml.createElement("div");
+			}
+			_node.set("name",node.name);
+			var position = "absolute";
+			var _g = node.type;
+			switch(_g[1]) {
+			case 0:
+				_node.set("class","page");
+				break;
+			case 1:
+				_node.set("class","artboard");
+				break;
+			case 4:
+				_node.set("class","svg");
+				var img = Xml.createElement("img");
+				img.set("src",node.src);
+				_node.insertChild(img,0);
+				break;
+			case 2:
+				_node.set("class","text");
+				position = "relative";
+				var tag = helpers.StringSketch.getTextTag(node.name);
+				var texte = (js.Boot.__cast(node , exp.ExportText)).text.text;
+				var subXml = Xml.parse("<" + tag.tagName + " class=\"" + tag.name + "\">" + texte + "</" + tag.tagName + ">");
+				_node = subXml;
+				break;
+			case 3:
+				_node.set("class","image");
+				var img = Xml.createElement("img");
+				img.set("src",node.src);
+				_node.insertChild(img,0);
+				break;
+			case 5:
+				_node.set("class","container");
+				break;
+			}
+			if(position == "absolute") _node.set("style","position:" + position + ";\n\t\t\t\tleft:" + castednode.relx + "px;\n\t\t\t\ttop:" + castednode.rely + "px;\n\t\t\t\twidth:" + castednode.width + "px;\n\t\t\t\theight:" + castednode.height + "px;");
+			xml.insertChild(_node,0);
+			if(treeNode.children != null) this.toHtml(treeNode,_node);
+		}
+		this.html = xml;
+		return xml;
+	}
+	,'export': function() {
+		var t = new HtmlView();
+		t.title = Global.doc.displayName();
+		t.content = this.html.toString();
+		var $export = t.execute();
+		var path = helpers.Document.dir(Global.doc) + "/view/" + Global.doc.displayName() + ".html";
+		var nsContent = NSString.stringWithString($export);
+		nsContent.writeToFile_atomically(path,false);
+	}
+	,__class__: HTMLExporter
+};
+var erazor = {};
+erazor.macro = {};
+erazor.macro.Template = function() {
+};
+$hxClasses["erazor.macro.Template"] = erazor.macro.Template;
+erazor.macro.Template.__name__ = ["erazor","macro","Template"];
+erazor.macro.Template.prototype = {
+	execute: function() {
+		return null;
+	}
+	,__class__: erazor.macro.Template
+};
+var HtmlView = function() {
+	erazor.macro.Template.call(this);
+};
+$hxClasses["HtmlView"] = HtmlView;
+HtmlView.__name__ = ["HtmlView"];
+HtmlView.__super__ = erazor.macro.Template;
+HtmlView.prototype = $extend(erazor.macro.Template.prototype,{
+	content: null
+	,title: null
+	,execute: function() {
+		var __b__ = new StringBuf();
+		__b__.b += "\n<!doctype html><html lang=\"en\"><head><meta charset=\"UTF-8\" /><title>";
+		__b__.b += Std.string(this.title);
+		__b__.b += "</title></head><body>\n";
+		__b__.b += Std.string(this.content);
+		__b__.b += "\n</body></html>\n\n\t";
+		return __b__.b;
+	}
+	,__class__: HtmlView
+});
 var HxOverrides = function() { };
 $hxClasses["HxOverrides"] = HxOverrides;
 HxOverrides.__name__ = ["HxOverrides"];
@@ -3234,25 +3445,28 @@ de.polygonal.ds.error.Assert = function() { };
 $hxClasses["de.polygonal.ds.error.Assert"] = de.polygonal.ds.error.Assert;
 de.polygonal.ds.error.Assert.__name__ = ["de","polygonal","ds","error","Assert"];
 var exp = {};
-exp.Behave = $hxClasses["exp.Behave"] = { __ename__ : ["exp","Behave"], __constructs__ : ["Scale","Exportable","Invisible","Mask","Bounded","Flat"] };
+exp.Behave = $hxClasses["exp.Behave"] = { __ename__ : ["exp","Behave"], __constructs__ : ["Scale","Exportable","Mask","Bounded","Flat","Visible","Svg"] };
 exp.Behave.Scale = ["Scale",0];
 exp.Behave.Scale.toString = $estr;
 exp.Behave.Scale.__enum__ = exp.Behave;
 exp.Behave.Exportable = ["Exportable",1];
 exp.Behave.Exportable.toString = $estr;
 exp.Behave.Exportable.__enum__ = exp.Behave;
-exp.Behave.Invisible = ["Invisible",2];
-exp.Behave.Invisible.toString = $estr;
-exp.Behave.Invisible.__enum__ = exp.Behave;
-exp.Behave.Mask = ["Mask",3];
+exp.Behave.Mask = ["Mask",2];
 exp.Behave.Mask.toString = $estr;
 exp.Behave.Mask.__enum__ = exp.Behave;
-exp.Behave.Bounded = ["Bounded",4];
+exp.Behave.Bounded = ["Bounded",3];
 exp.Behave.Bounded.toString = $estr;
 exp.Behave.Bounded.__enum__ = exp.Behave;
-exp.Behave.Flat = ["Flat",5];
+exp.Behave.Flat = ["Flat",4];
 exp.Behave.Flat.toString = $estr;
 exp.Behave.Flat.__enum__ = exp.Behave;
+exp.Behave.Visible = ["Visible",5];
+exp.Behave.Visible.toString = $estr;
+exp.Behave.Visible.__enum__ = exp.Behave;
+exp.Behave.Svg = ["Svg",6];
+exp.Behave.Svg.toString = $estr;
+exp.Behave.Svg.__enum__ = exp.Behave;
 exp.Exportable = function() { };
 $hxClasses["exp.Exportable"] = exp.Exportable;
 exp.Exportable.__name__ = ["exp","Exportable"];
@@ -3269,6 +3483,7 @@ exp.Exportable.prototype = {
 	,__class__: exp.Exportable
 };
 exp.ExportLayer = function(layer) {
+	this.visible = true;
 	this.name = Std.string(layer.name());
 	this.orig = layer;
 	this.type = exp.ExportTypes.Container;
@@ -3289,6 +3504,7 @@ exp.ExportLayer.prototype = {
 	,rely: null
 	,width: null
 	,height: null
+	,visible: null
 	,set_relx: function(f) {
 		return this.relx = Math.round(f * 100) / 100;
 	}
@@ -3308,10 +3524,8 @@ exp.ExportLayer.prototype = {
 		return this.height = Math.round(f * 100) / 100;
 	}
 	,'export': function() {
-		var m = Std.string((this.behaviour & 1 << exp.Behave.Exportable[1]) != 0) + this.orig.name();
-		var p = { fileName : "ExportLayer.hx", lineNumber : 39, className : "exp.ExportLayer", methodName : "export"};
-		log(p.className + " " + p.lineNumber + "  " + Std.string(m));
 		if(this.orig != null && (this.behaviour & 1 << exp.Behave.Exportable[1]) != 0) {
+			if((this.behaviour & 1 << exp.Behave.Visible[1]) != 0) this.visible = true; else this.visible = false;
 			this.set_x(this.orig.absoluteRect().rulerX());
 			this.set_y(this.orig.absoluteRect().rulerY());
 			this.set_width(this.orig.frame().width());
@@ -3319,20 +3533,32 @@ exp.ExportLayer.prototype = {
 			this.set_relx(this.orig.frame().x());
 			this.set_rely(this.orig.frame().y());
 			try {
+				if((this.behaviour & 1 << exp.Behave.Svg[1]) != 0) {
+					var p = { fileName : "ExportLayer.hx", lineNumber : 53, className : "exp.ExportLayer", methodName : "export"};
+					log(p.className + " " + p.lineNumber + "  " + "--------------svg style--------");
+					this.src = helpers.Layer.exportSvg(this.orig,helpers.Document.dir(Global.doc) + "view/assets");
+					this.type = exp.ExportTypes.Svg;
+					this.src = this.relativeSrc(this.src);
+					return this;
+				}
 				if((this.behaviour & 1 << exp.Behave.Scale[1]) != 0) {
 					var m = "-------------------scale" + this.extractScaleFactor(this.name);
-					var p = { fileName : "ExportLayer.hx", lineNumber : 49, className : "exp.ExportLayer", methodName : "export"};
+					var p = { fileName : "ExportLayer.hx", lineNumber : 60, className : "exp.ExportLayer", methodName : "export"};
 					log(p.className + " " + p.lineNumber + "  " + Std.string(m));
 				}
 				if((this.behaviour & 1 << exp.Behave.Mask[1]) != 0) {
-					var p = { fileName : "ExportLayer.hx", lineNumber : 51, className : "exp.ExportLayer", methodName : "export"};
+					var p = { fileName : "ExportLayer.hx", lineNumber : 62, className : "exp.ExportLayer", methodName : "export"};
 					log(p.className + " " + p.lineNumber + "  " + "-------------------------has mask");
 				}
-				if(!((this.behaviour & 1 << exp.Behave.Flat[1]) != 0)) this.src = helpers.Layer["export"](this.orig,helpers.Document.dir(Global.doc) + "exported",1); else {
-					var p = { fileName : "ExportLayer.hx", lineNumber : 56, className : "exp.ExportLayer", methodName : "export"};
+				if(!((this.behaviour & 1 << exp.Behave.Flat[1]) != 0)) this.src = helpers.Layer["export"](this.orig,helpers.Document.dir(Global.doc) + "view/assets",1); else {
+					var p = { fileName : "ExportLayer.hx", lineNumber : 67, className : "exp.ExportLayer", methodName : "export"};
 					log(p.className + " " + p.lineNumber + "  " + "-------------------------has flat");
-					this.src = helpers.Layer.exportFlat(this.orig,helpers.Document.dir(Global.doc) + "exported",1);
+					this.src = helpers.Layer["export"](this.orig,helpers.Document.dir(Global.doc) + "view/assets",1);
+					this.type = exp.ExportTypes.Image;
 				}
+				this.src = this.relativeSrc(this.src);
+				var p = { fileName : "ExportLayer.hx", lineNumber : 72, className : "exp.ExportLayer", methodName : "export"};
+				log(p.className + " " + p.lineNumber + "  " + Std.string("sr=" + this.src));
 			} catch( err ) {
 				var m = "Error=" + Std.string(err);
 				log(m);
@@ -3343,6 +3569,10 @@ exp.ExportLayer.prototype = {
 	}
 	,normalize: function(f) {
 		return Math.round(f * 100) / 100;
+	}
+	,relativeSrc: function(absolutePath) {
+		var relative = StringTools.replace(absolutePath,helpers.Document.dir(Global.doc) + "view/","");
+		return relative;
 	}
 	,extractScaleFactor: function(name) {
 		var r = new EReg("([*]+\\d+)(((.|,)\\d+)+)?","");
@@ -3379,7 +3609,16 @@ exp.ExportArtBoard.__name__ = ["exp","ExportArtBoard"];
 exp.ExportArtBoard.__interfaces__ = [exp.Exportable];
 exp.ExportArtBoard.__super__ = exp.ExportContainer;
 exp.ExportArtBoard.prototype = $extend(exp.ExportContainer.prototype,{
-	__class__: exp.ExportArtBoard
+	'export': function() {
+		this.set_x(2);
+		this.set_y(2);
+		this.set_relx(3);
+		this.set_rely(3);
+		this.set_width(100.1);
+		this.set_height(100);
+		return this;
+	}
+	,__class__: exp.ExportArtBoard
 });
 exp.ExportFactory = function() { };
 $hxClasses["exp.ExportFactory"] = exp.ExportFactory;
@@ -3389,6 +3628,7 @@ exp.ExportFactory.create = function(origLayer) {
 	log(p.className + " " + p.lineNumber + "  " + "create");
 	var klass = helpers.Layer._class(origLayer);
 	var flags = exp.ExportFactory.behaviour(origLayer);
+	if(origLayer.isVisible()) flags |= 1 << exp.Behave.Visible[1];
 	var $export = null;
 	log(klass);
 	if(klass == MSPage) $export = new exp.ExportPage(origLayer);
@@ -3406,10 +3646,15 @@ exp.ExportFactory.behaviour = function(orig) {
 };
 exp.ExportFactory.extract = function(name) {
 	var flags = 0;
-	var p = { fileName : "ExportFactory.hx", lineNumber : 55, className : "exp.ExportFactory", methodName : "extract"};
+	var p = { fileName : "ExportFactory.hx", lineNumber : 59, className : "exp.ExportFactory", methodName : "extract"};
 	log(p.className + " " + p.lineNumber + "  " + Std.string("extract=" + name));
 	var _g = exp.ExportFactory.beginWith(name);
 	switch(_g) {
+	case "*":
+		flags |= 1 << exp.Behave.Svg[1];
+		flags |= 1 << exp.Behave.Exportable[1];
+		flags |= 1 << exp.Behave.Flat[1];
+		break;
 	case "-":
 		flags &= 268435455 - (1 << exp.Behave.Exportable[1]);
 		break;
@@ -3424,12 +3669,12 @@ exp.ExportFactory.extract = function(name) {
 		flags |= 1 << exp.Behave.Exportable[1];
 	}
 	if(helpers.StringSketch.startsWith(name,"m")) {
-		var p = { fileName : "ExportFactory.hx", lineNumber : 83, className : "exp.ExportFactory", methodName : "extract"};
+		var p = { fileName : "ExportFactory.hx", lineNumber : 88, className : "exp.ExportFactory", methodName : "extract"};
 		log(p.className + " " + p.lineNumber + "  " + "startwith mask");
 		flags |= 1 << exp.Behave.Mask[1];
 	}
 	if(helpers.StringSketch.endsWith(name,"*2")) {
-		var p = { fileName : "ExportFactory.hx", lineNumber : 87, className : "exp.ExportFactory", methodName : "extract"};
+		var p = { fileName : "ExportFactory.hx", lineNumber : 92, className : "exp.ExportFactory", methodName : "extract"};
 		log(p.className + " " + p.lineNumber + "  " + "endsWith *n");
 		flags |= 1 << exp.Behave.Scale[1];
 	}
@@ -3461,7 +3706,16 @@ exp.ExportPage.__name__ = ["exp","ExportPage"];
 exp.ExportPage.__interfaces__ = [exp.Exportable];
 exp.ExportPage.__super__ = exp.ExportContainer;
 exp.ExportPage.prototype = $extend(exp.ExportContainer.prototype,{
-	__class__: exp.ExportPage
+	'export': function() {
+		this.set_x(0);
+		this.set_y(0);
+		this.set_relx(0);
+		this.set_rely(0);
+		this.set_width(0.1);
+		this.set_height(0);
+		return this;
+	}
+	,__class__: exp.ExportPage
 });
 exp.Alignement = $hxClasses["exp.Alignement"] = { __ename__ : ["exp","Alignement"], __constructs__ : ["Left","Right","Center","Justify"] };
 exp.Alignement.Left = ["Left",0];
@@ -3509,6 +3763,8 @@ exp.ExportText.prototype = $extend(exp.ExportLayer.prototype,{
 		this.TP.lineSpacing = layer.lineSpacing();
 		this.TP.toObj = $bind(this,this.toObject);
 		this.text = this.TP;
+		var m = layer.font();
+		log(m);
 		this.type = exp.ExportTypes.Text;
 		return exp.ExportLayer.prototype["export"].call(this);
 	}
@@ -3521,7 +3777,7 @@ exp.ExportText.prototype = $extend(exp.ExportLayer.prototype,{
 	}
 	,__class__: exp.ExportText
 });
-exp.ExportTypes = $hxClasses["exp.ExportTypes"] = { __ename__ : ["exp","ExportTypes"], __constructs__ : ["Page","ArtBoard","Text","Image","Container"] };
+exp.ExportTypes = $hxClasses["exp.ExportTypes"] = { __ename__ : ["exp","ExportTypes"], __constructs__ : ["Page","ArtBoard","Text","Image","Svg","Container"] };
 exp.ExportTypes.Page = ["Page",0];
 exp.ExportTypes.Page.toString = $estr;
 exp.ExportTypes.Page.__enum__ = exp.ExportTypes;
@@ -3534,7 +3790,10 @@ exp.ExportTypes.Text.__enum__ = exp.ExportTypes;
 exp.ExportTypes.Image = ["Image",3];
 exp.ExportTypes.Image.toString = $estr;
 exp.ExportTypes.Image.__enum__ = exp.ExportTypes;
-exp.ExportTypes.Container = ["Container",4];
+exp.ExportTypes.Svg = ["Svg",4];
+exp.ExportTypes.Svg.toString = $estr;
+exp.ExportTypes.Svg.__enum__ = exp.ExportTypes;
+exp.ExportTypes.Container = ["Container",5];
 exp.ExportTypes.Container.toString = $estr;
 exp.ExportTypes.Container.__enum__ = exp.ExportTypes;
 var haxe = {};
@@ -4310,7 +4569,7 @@ helpers.Artboard.hideOtherLayers = function(a,currentLayer,withChilds) {
 	var parents = [];
 	var node = currentLayer.parentGroup();
 	while(node != a) {
-		parents.push(node);
+		if(node.isVisible()) parents.push(node);
 		node = node.parentGroup();
 	}
 	var $it0 = (function($this) {
@@ -4322,14 +4581,21 @@ helpers.Artboard.hideOtherLayers = function(a,currentLayer,withChilds) {
 	while( $it0.hasNext() ) {
 		var layer = $it0.next();
 		if(currentLayer != layer) {
+			var layerParent = layer.parentGroup();
 			if(withChilds) {
-				if(layer.isVisible) try {
-					layer.isVisible = false;
-				} catch( err ) {
-					var p = { fileName : "Artboard.hx", lineNumber : 66, className : "helpers.Artboard", methodName : "hideOtherLayers"};
-					log(p.className + " " + p.lineNumber + "  " + Std.string(err));
+				if(layer.isVisible()) {
+					var m = "________visible________" + layerParent.name() + "currentLayer" + layer.name() + "visible=" + Std.string(layer.isVisible());
+					var p = { fileName : "Artboard.hx", lineNumber : 68, className : "helpers.Artboard", methodName : "hideOtherLayers"};
+					log(p.className + " " + p.lineNumber + "  " + Std.string(m));
+					try {
+						layer.setIsVisible(false);
+						helpers.Artboard.setHiddenLayers(a,layer);
+					} catch( err ) {
+						var m = "________________________" + Std.string(err);
+						var p = { fileName : "Artboard.hx", lineNumber : 73, className : "helpers.Artboard", methodName : "hideOtherLayers"};
+						log(p.className + " " + p.lineNumber + "  " + Std.string(m));
+					}
 				}
-				helpers.Artboard.setHiddenLayers(a,layer);
 			} else {
 			}
 		}
@@ -4339,9 +4605,9 @@ helpers.Artboard.hideOtherLayers = function(a,currentLayer,withChilds) {
 		var p = parents[_g];
 		++_g;
 		try {
-			p.isVisible = true;
+			p.setIsVisible(true);
 		} catch( err ) {
-			var p1 = { fileName : "Artboard.hx", lineNumber : 73, className : "helpers.Artboard", methodName : "hideOtherLayers"};
+			var p1 = { fileName : "Artboard.hx", lineNumber : 83, className : "helpers.Artboard", methodName : "hideOtherLayers"};
 			log(p1.className + " " + p1.lineNumber + "  " + Std.string(err));
 		}
 	}
@@ -4351,7 +4617,7 @@ helpers.Artboard.showHiddenLayers = function(a) {
 	var $it0 = helpers.Artboard.getHiddenLayers(a).iterator();
 	while( $it0.hasNext() ) {
 		var hidden = $it0.next();
-		hidden.isVisible = true;
+		hidden.setIsVisible(true);
 	}
 };
 helpers.Artboard.getHiddenLayers = function(a) {
@@ -4458,16 +4724,45 @@ helpers.Layer.isText = function(l) {
 };
 helpers.Layer["export"] = function(layer,path,factor) {
 	path = helpers.StringSketch.cleanPath(path);
+	var invisible = false;
 	var artboard = layer.parentArtboard();
 	helpers.Artboard.hideOtherLayers(artboard,layer);
+	if(!layer.isVisible()) {
+		invisible = true;
+		layer.setIsVisible(true);
+	}
 	path = path + "/" + helpers.StringSketch.clean(layer.name()) + ".png";
 	if(factor != null) factor = factor; else factor = 1;
 	var slice = helpers.Layer.withFactor(layer,factor);
 	Global.doc.saveArtboardOrSlice_toFile(slice,path);
+	if(invisible) layer.setIsVisible(false);
 	try {
 		helpers.Artboard.showHiddenLayers(artboard);
 	} catch( msg ) {
-		var p = { fileName : "Layer.hx", lineNumber : 68, className : "helpers.Layer", methodName : "export"};
+		var p = { fileName : "Layer.hx", lineNumber : 72, className : "helpers.Layer", methodName : "export"};
+		log(p.className + " " + p.lineNumber + "  " + Std.string(msg));
+	}
+	return path;
+};
+helpers.Layer.exportSvg = function(layer,path) {
+	var factor = null;
+	path = helpers.StringSketch.cleanPath(path);
+	var invisible = false;
+	var artboard = layer.parentArtboard();
+	helpers.Artboard.hideOtherLayers(artboard,layer);
+	if(!layer.isVisible()) {
+		invisible = true;
+		layer.setIsVisible(true);
+	}
+	path = path + "/" + helpers.StringSketch.clean(layer.name()) + ".svg";
+	if(factor != null) factor = factor; else factor = 1;
+	var slice = helpers.Layer.withFactor(layer,factor);
+	Global.doc.saveArtboardOrSlice_toFile(slice,path);
+	if(invisible) layer.setIsVisible(false);
+	try {
+		helpers.Artboard.showHiddenLayers(artboard);
+	} catch( msg ) {
+		var p = { fileName : "Layer.hx", lineNumber : 96, className : "helpers.Layer", methodName : "exportSvg"};
 		log(p.className + " " + p.lineNumber + "  " + Std.string(msg));
 	}
 	return path;
@@ -4482,7 +4777,7 @@ helpers.Layer.withFactor = function(layer,factor) {
 	try {
 		rect = copy.rectByAccountingForStyleSize(copy.absoluteRect().rect());
 	} catch( msg ) {
-		var p = { fileName : "Layer.hx", lineNumber : 83, className : "helpers.Layer", methodName : "withFactor"};
+		var p = { fileName : "Layer.hx", lineNumber : 110, className : "helpers.Layer", methodName : "withFactor"};
 		log(p.className + " " + p.lineNumber + "  " + Std.string(msg));
 	}
 	var slice = MSSlice.sliceWithRect_scale(rect,factor);
@@ -4792,6 +5087,7 @@ Xml.Document = "document";
 BasicExporter.lindent = "";
 BasicExporter.pindent = "";
 BasicExporter.aindent = "";
+HtmlView.__meta__ = { obj : { template : ["\n<!doctype html><html lang=\"en\"><head><meta charset=\"UTF-8\" /><title>@title</title></head><body>\n@content\n</body></html>\n\n\t"]}};
 de.polygonal.ds.HashKey._counter = 0;
 haxe.ds.ObjectMap.count = 0;
 haxe.xml.Parser.escapes = (function($this) {

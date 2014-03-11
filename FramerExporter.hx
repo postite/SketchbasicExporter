@@ -45,7 +45,8 @@ typedef LayerType={
 	?image:ImageType,
 	imageType:String,
 	?text:TexteType,
-	children:Array<LayerType>
+	children:Array<LayerType>,
+	visible:Bool
 
 }
 class FramerExporter{
@@ -68,9 +69,9 @@ class FramerExporter{
 		// }
 	}
 
-	public function toJson(tree:TreeNode<Exportable>,obj:Dynamic)
+	public function toJson(tree:TreeNode<Exportable>,?obj:Dynamic)
 	{
-		if( obj.children==null)obj.children=[];
+		
 		for (node in tree.childIterator()){
 			var treeNode=tree.find(node); //heavy
 
@@ -80,6 +81,7 @@ class FramerExporter{
 				layer.id=++id;
 				layer.name=_node.name;
 					var layerframe:LayerFrame= cast {};
+					_trace('height=${_node.height} type=${_node.type} visible=${_node.visible}');
 					layerframe.height=_node.height;
 					layerframe.width=_node.width;
 					layerframe.x=_node.relx;
@@ -91,6 +93,7 @@ class FramerExporter{
 				layer.imageType=null;
 				layer.image=null;
 				layer.text=null;
+				layer.visible=_node.visible;
 				layer.children=[];
 				
 
@@ -109,7 +112,18 @@ class FramerExporter{
 						image.path=_node.src;
 						layer.imageType="png";
 						layer.image=image;
-
+				case Svg:
+					var image:ImageType=cast {};
+						var frame:Frame=cast {};
+							frame.x=_node.relx;
+							frame.y=_node.rely;
+							frame.width=_node.width;
+							frame.height=_node.height;
+						image.frame=frame;
+						
+						image.path=_node.src;
+						layer.imageType="svg";
+						layer.image=image;
 				case Text:
 					untyped layer.text=node.toObject();
 
@@ -117,8 +131,15 @@ class FramerExporter{
 				
 			}
 			
+			if(obj==null){
+				obj=[];
+				obj.push(layer);
+			}else if(_node.type==Page){
+				obj.push(layer);
+			}
+			else{
 			obj.children.push(layer);
-			
+			}
 			if (treeNode.hasChildren()){
 				toJson(treeNode,layer);
 			}
