@@ -20,7 +20,7 @@ class BasicExporter
 	 var tree:TreeNode<Exportable>;
 	function new()
 	{
-		log("start");
+		_trace("----------------start---------------------");
 
 
 		/*
@@ -51,43 +51,43 @@ class BasicExporter
 		for (page in doc.pages()){
 			doc.setCurrentPage(page);
 			builder.appendChild(exp.ExportFactory.create(page).export());
-			log(indent+page.name());
+			_trace(indent+page.name());
 			ArtboardsLoop(cast page.artboards());
 			
 		}
 
 
-		//log(tree.toString());
-		log("xml");
-		try{
-		//had to modify StringTools & haxe.xml.Parse ( '"')
-		var xml:Xml=Xml.createElement("div");
-		var xm=toXml(tree,xml);
-		log( xm.toString());
-		//exporthtml(haxe.xml.Printer.print(xm));
+		// //log(tree.toString());
+		// log("xml");
+		// try{
+		// //had to modify StringTools & haxe.xml.Parse ( '"')
+		// var xml:Xml=Xml.createElement("div");
+		// var xm=toXml(tree,xml);
+		// log( xm.toString());
+		// //exporthtml(haxe.xml.Printer.print(xm));
 		
-		}catch(msg:Dynamic){
-		log("xml error"+msg);
-		}
-		log("html");
-		try{
+		// }catch(msg:Dynamic){
+		// log("xml error"+msg);
+		// }
+		// log("html");
+		// try{
 		
-		var xml:Xml=Xml.createElement("div");
-		var html=new HTMLExporter();
-		html.toHtml(tree,xml);
-		html.export();
+		// var xml:Xml=Xml.createElement("div");
+		// var html=new HTMLExporter();
+		// html.toHtml(tree,xml);
+		// html.export();
 		
-		}catch(msg:Dynamic){
-		log("xml error"+msg);
-		}
-		log("jason");
-		try{
-			var obj={};
-			var jon=toJson(tree,obj);
-			//log(jon.toString());
-			log(haxe.Json.stringify(jon));
-			exportjson( haxe.Json.stringify(jon));
-		}
+		// }catch(msg:Dynamic){
+		// log("xml error"+msg);
+		// }
+		// log("jason");
+		// try{
+		// 	var obj={};
+		// 	var jon=toJson(tree,obj);
+		// 	//log(jon.toString());
+		// 	log(haxe.Json.stringify(jon));
+		// 	exportjson( haxe.Json.stringify(jon));
+		// }
 		// catch(msg:Dynamic){
 		// 	log("error"+msg);
 		// }
@@ -98,32 +98,34 @@ class BasicExporter
 
 			exportFramer( haxe.Json.stringify(jsonframe));
 		}catch(msg:Dynamic){
-			log("error for framer"+msg);
+			_trace("error for framer"+msg);
 		}
 
 		//log( xm.firstChild().nodeName);
-		log("done");
+		_trace("done");
 	}
 
 	function ArtboardsLoop(arts:SketchArray<MSArtboardGroup>)
 	{
 		builder.down();
-		log("ArtboardsLoop");
+		_trace("ArtboardsLoop");
 		var indent="+";
 		var native=arts.iterator().haxeArray();
 		native.reverse();
 		for (art in native){
 			builder.appendChild(exp.ExportFactory.create(art).export());
-			log(indent+art.name());
+			_trace("name="+indent+art.name());
 			bigloop(art.layers());
 
 		}
 		builder.up();
+		_trace("end Artboard loop");
 
 	}
 
 	function bigloop(layers:SketchArray<MSLayer>,?indent:String)
 	{
+		_trace(" bigloop");
 		builder.down();
 		indent= (indent==null)? "-" :indent+"-"; 
 		var native= layers.iterator().haxeArray();
@@ -135,8 +137,9 @@ class BasicExporter
 			if(exported!=null){
 				_trace("---------------------------"+exported.name);
 			builder.appendChild(exported);
-			log(indent+layer.name());
+			_trace("name="+indent+layer.name());
 			if(layer.isGroup() && !exported.behaviour.has(Flat)){
+				_trace( 'isgroup');
 				bigloop(layer.layers(),indent);
 			};
 			}
@@ -144,7 +147,7 @@ class BasicExporter
 		}
 
 		builder.up();
-
+		_trace("end bigloop");
 	}
 
 	
@@ -153,7 +156,7 @@ class BasicExporter
 	// 	try
 	// 	tree.preorder(levelOrderfunc)
 	// 	catch( err:Dynamic)
-	// 	log( "eer"+err);
+	// 	_trace( "eer"+err);
 
 
 	// }
@@ -208,6 +211,8 @@ class BasicExporter
 					_node.insertChild(img,0);
 				case Container:
 					_node.set("class","container");
+				case Slice:
+					_node.set("class","slice");
 					
 			}
 			
