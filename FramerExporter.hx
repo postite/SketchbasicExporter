@@ -71,13 +71,14 @@ class FramerExporter{
 
 	public function toJson(tree:TreeNode<Exportable>,?obj:Dynamic)
 	{
-		
+		_trace("toJson");
 		for (node in tree.childIterator()){
 			var treeNode=tree.find(node); //heavy
-
+			_trace("for in tree");
 			//generic 
 			var layer:LayerType=cast {};
 			var _node= cast(node,exp.ExportLayer);
+
 				layer.id=++id;
 				layer.name=_node.name;
 					var layerframe:LayerFrame= cast {};
@@ -96,7 +97,7 @@ class FramerExporter{
 				layer.visible=_node.visible;
 				layer.children=[];
 				
-
+			_trace("switch type"+node.type);
 			switch(node.type){
 
 				case Image:
@@ -128,8 +129,10 @@ class FramerExporter{
 					untyped layer.text=node.toObject();
 
 				case _:
+				_trace("badtype");
 				
 			}
+			_trace("end Switch for "+node.type);
 			
 			if(obj==null){
 				obj=[];
@@ -144,6 +147,7 @@ class FramerExporter{
 				toJson(treeNode,layer);
 			}
 		}
+
 		return obj;	
 	}
 
