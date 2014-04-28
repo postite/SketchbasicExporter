@@ -44,6 +44,7 @@ class BasicExporter
 
 		}
 		*/
+		cleanup();
 
 		var indent="*";
 		tree= new TreeNode(cast new exp.ExportContainer(null));

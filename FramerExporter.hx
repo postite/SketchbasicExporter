@@ -74,7 +74,7 @@ class FramerExporter{
 		_trace("toJson");
 		for (node in tree.childIterator()){
 			var treeNode=tree.find(node); //heavy
-			_trace("for in tree");
+			//_trace("for in tree");
 			//generic 
 			var layer:LayerType=cast {};
 			var _node= cast(node,exp.ExportLayer);
@@ -82,7 +82,7 @@ class FramerExporter{
 				layer.id=++id;
 				layer.name=_node.name;
 					var layerframe:LayerFrame= cast {};
-					_trace('height=${_node.height} type=${_node.type} visible=${_node.visible}');
+					//_trace('height=${_node.height} type=${_node.type} visible=${_node.visible}');
 					layerframe.height=_node.height;
 					layerframe.width=_node.width;
 					layerframe.x=_node.relx;
@@ -97,7 +97,7 @@ class FramerExporter{
 				layer.visible=_node.visible;
 				layer.children=[];
 				
-			_trace("switch type"+node.type);
+			//_trace("switch type"+node.type);
 			switch(node.type){
 
 				case Image:
@@ -111,7 +111,7 @@ class FramerExporter{
 						image.frame=frame;
 						
 						image.path=_node.src;
-						layer.imageType="png";
+						layer.imageType=_node.format;
 						layer.image=image;
 				case Svg:
 					var image:ImageType=cast {};
@@ -123,7 +123,7 @@ class FramerExporter{
 						image.frame=frame;
 						
 						image.path=_node.src;
-						layer.imageType="svg";
+						layer.imageType=_node.format;
 						layer.image=image;
 				case Text:
 					untyped layer.text=node.toObject();
@@ -132,7 +132,7 @@ class FramerExporter{
 				_trace("badtype");
 				
 			}
-			_trace("end Switch for "+node.type);
+			//_trace("end Switch for "+node.type);
 			
 			if(obj==null){
 				obj=[];
