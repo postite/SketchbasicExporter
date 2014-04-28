@@ -45,6 +45,7 @@ class BasicExporter
 		}
 		*/
 		cleanup();
+		
 
 		var indent="*";
 		tree= new TreeNode(cast new exp.ExportContainer(null));
@@ -57,6 +58,7 @@ class BasicExporter
 			ArtboardsLoop(cast page.artboards());
 			
 		}
+		doc.setCurrentPage(activePage);
 
 
 		// //log(tree.toString());
@@ -107,6 +109,15 @@ class BasicExporter
 		_trace("done");
 	}
 
+	
+	//	path = path +"/"+page.name()+"/"+artboard.name()+"/"+  layer.name().clean()+ '.png';
+		//do not know what it does !
+	function cleanup(){
+		try ns.NSFileManager.defaultManager().removeItemAtPath(doc.dir()+"view/")
+			catch(msg:Dynamic)_trace("failde to clean view"+ msg);
+	}
+	
+
 	function ArtboardsLoop(arts:SketchArray<MSArtboardGroup>)
 	{
 		builder.down();
@@ -115,11 +126,12 @@ class BasicExporter
 		var native=arts.iterator().haxeArray();
 		native.reverse();
 		for (art in native){
-			builder.appendChild(exp.ExportFactory.create(art).export());
-			_trace("name="+indent+art.name());
 			var exportable=exp.ExportFactory.create(art);
+			if(exportable!=null){
+			builder.appendChild(exportable.export());
+			_trace("befor bigloop name="+indent+art.name());
 			bigloop(art.layers());
-
+			}
 		}
 		builder.up();
 		_trace("end Artboard loop");
@@ -135,14 +147,14 @@ class BasicExporter
 		native.reverse();
 
 		for(layer in native){
-			var exported=exp.ExportFactory.create(layer).export();
+			var exported:Exportable=null;
+			var factory=exp.ExportFactory.create(layer);
+			if (factory!=null)exported=factory.export();
 				_trace("------------layer---------------"+layer.name());
 			if(exported!=null){
-				_trace("---------------------------"+exported.name);
+				_trace("--------------type-------------"+exported.type);
 			builder.appendChild(exported);
 			_trace("name="+indent+layer.name());
-			if(layer.isGroup() && !exported.behaviour.has(Flat)){
-				_trace( 'isgroup');
 			_trace( "flat?"+exported.behaviour.has(Flat));
 			_trace( "Sliced?"+exported.behaviour.has(Sliced));
 			
