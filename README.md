@@ -29,11 +29,14 @@ use sketchApi as haxelib
 use it on a real use case 
 define more Behaviours ... adjust them.
 scaling ( retina etc...)
-1-html:
+1- html:
 generate CSS
 investingate Bootstraping
-2-Framer:
+2- Framer:
 lots
+
+3- looping:
+choose between all artboards/Page or single 
 
 
 
