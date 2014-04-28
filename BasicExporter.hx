@@ -49,6 +49,7 @@ class BasicExporter
 		var indent="*";
 		tree= new TreeNode(cast new exp.ExportContainer(null));
 		builder= new TreeBuilder(tree);
+		var activePage=doc.currentPage();
 		for (page in doc.pages()){
 			doc.setCurrentPage(page);
 			builder.appendChild(exp.ExportFactory.create(page).export());
