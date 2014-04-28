@@ -143,6 +143,11 @@ class BasicExporter
 			_trace("name="+indent+layer.name());
 			if(layer.isGroup() && !exported.behaviour.has(Flat)){
 				_trace( 'isgroup');
+			_trace( "flat?"+exported.behaviour.has(Flat));
+			_trace( "Sliced?"+exported.behaviour.has(Sliced));
+			
+			if(layer.isGroup() && !exported.behaviour.has(Flat) ){
+				_trace( 'isgroup and not Slice nor Flat');
 				bigloop(layer.layers(),indent);
 			};
 			}
