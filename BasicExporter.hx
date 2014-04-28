@@ -117,6 +117,7 @@ class BasicExporter
 		for (art in native){
 			builder.appendChild(exp.ExportFactory.create(art).export());
 			_trace("name="+indent+art.name());
+			var exportable=exp.ExportFactory.create(art);
 			bigloop(art.layers());
 
 		}
