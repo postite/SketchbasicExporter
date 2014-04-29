@@ -12,8 +12,8 @@ var BasicExporter = function() {
 	var conf = new exp.Config();
 	conf.check();
 	this.config = exp.ExportFactory.config = conf.data;
-	this.cleanup();
-	Global._trace("allPages?=" + Std.string(this.config.allPages),{ fileName : "BasicExporter.hx", lineNumber : 51, className : "BasicExporter", methodName : "new"});
+	if(this.config.cleanUp == true) this.cleanup();
+	Global._trace("allPages?=" + Std.string(this.config.allPages),{ fileName : "BasicExporter.hx", lineNumber : 53, className : "BasicExporter", methodName : "new"});
 	var indent = "*";
 	this.tree = new de.polygonal.ds.TreeNode(new exp.ExportContainer(null));
 	this.builder = new de.polygonal.ds.TreeBuilder(this.tree);
@@ -32,7 +32,7 @@ var BasicExporter = function() {
 			var page = $it0.next();
 			Global.doc.setCurrentPage(page);
 			this.builder.appendChild(exp.ExportFactory.create(page)["export"]());
-			Global._trace(indent + page.name(),{ fileName : "BasicExporter.hx", lineNumber : 67, className : "BasicExporter", methodName : "new"});
+			Global._trace(indent + page.name(),{ fileName : "BasicExporter.hx", lineNumber : 69, className : "BasicExporter", methodName : "new"});
 			this.ArtboardsLoop(page.artboards());
 		}
 		Global.doc.setCurrentPage(activePage);
@@ -42,9 +42,9 @@ var BasicExporter = function() {
 		var jsonframe = framer.toJson(this.tree);
 		this.exportFramer(JSON.stringify(jsonframe));
 	} catch( msg ) {
-		Global._trace("error for framer" + Std.string(msg),{ fileName : "BasicExporter.hx", lineNumber : 118, className : "BasicExporter", methodName : "new"});
+		Global._trace("error for framer" + Std.string(msg),{ fileName : "BasicExporter.hx", lineNumber : 120, className : "BasicExporter", methodName : "new"});
 	}
-	Global._trace("done",{ fileName : "BasicExporter.hx", lineNumber : 122, className : "BasicExporter", methodName : "new"});
+	Global._trace("done",{ fileName : "BasicExporter.hx", lineNumber : 124, className : "BasicExporter", methodName : "new"});
 };
 $hxClasses["BasicExporter"] = BasicExporter;
 BasicExporter.__name__ = ["BasicExporter"];
@@ -62,31 +62,52 @@ BasicExporter.prototype = {
 			var error = null;
 			_this.removeItemAtPath_error(dir,error);
 		} catch( msg ) {
-			Global._trace("failde to clean view" + Std.string(msg),{ fileName : "BasicExporter.hx", lineNumber : 130, className : "BasicExporter", methodName : "cleanup"});
+			Global._trace("failde to clean view" + Std.string(msg),{ fileName : "BasicExporter.hx", lineNumber : 132, className : "BasicExporter", methodName : "cleanup"});
+		}
+	}
+	,cleanupArtboardDir: function(art) {
+		try {
+			var _this = NSFileManager.defaultManager();
+			var dir = helpers.Document.dir(Global.doc) + "view/images/" + art.parentPage().name() + "/" + art.name() + "/";
+			var error = null;
+			_this.removeItemAtPath_error(dir,error);
+		} catch( msg ) {
+			Global._trace("failde to clean view" + Std.string(msg),{ fileName : "BasicExporter.hx", lineNumber : 137, className : "BasicExporter", methodName : "cleanupArtboardDir"});
 		}
 	}
 	,ArtboardsLoop: function(arts) {
 		this.builder.down();
-		Global._trace("ArtboardsLoop",{ fileName : "BasicExporter.hx", lineNumber : 137, className : "BasicExporter", methodName : "ArtboardsLoop"});
-		var indent = "+";
+		Global._trace("ArtboardsLoop",{ fileName : "BasicExporter.hx", lineNumber : 144, className : "BasicExporter", methodName : "ArtboardsLoop"});
 		var $native = new NativeArrayIterator(arts).haxeArray();
 		$native.reverse();
-		var _g = 0;
-		while(_g < $native.length) {
-			var art = $native[_g];
-			++_g;
-			var exportable = exp.ExportFactory.create(art);
-			if(exportable != null) {
-				this.builder.appendChild(exportable["export"]());
-				Global._trace("befor bigloop name=" + indent + art.name(),{ fileName : "BasicExporter.hx", lineNumber : 145, className : "BasicExporter", methodName : "ArtboardsLoop"});
-				this.bigloop(art.layers());
+		if(this.config.allArtBoards != true) {
+			if(Global.selection != null && helpers.Layer._class(Global.selection.firstObject()) == MSArtboardGroup) {
+				this.cleanupArtboardDir(Global.selection.firstObject());
+				this.processArtboard(Global.selection.firstObject());
+			} else {
+				helpers.UI.alert("selectan artboard\n aborting");
+				throw "abort";
+			}
+		} else {
+			var _g = 0;
+			while(_g < $native.length) {
+				var art = $native[_g];
+				++_g;
+				this.processArtboard(art);
 			}
 		}
 		this.builder.up();
-		Global._trace("end Artboard loop",{ fileName : "BasicExporter.hx", lineNumber : 150, className : "BasicExporter", methodName : "ArtboardsLoop"});
+		Global._trace("end Artboard loop",{ fileName : "BasicExporter.hx", lineNumber : 162, className : "BasicExporter", methodName : "ArtboardsLoop"});
+	}
+	,processArtboard: function(art) {
+		var exportable = exp.ExportFactory.create(art);
+		if(exportable != null) {
+			this.builder.appendChild(exportable["export"]());
+			this.bigloop(art.layers());
+		}
 	}
 	,bigloop: function(layers,indent) {
-		Global._trace(" bigloop",{ fileName : "BasicExporter.hx", lineNumber : 156, className : "BasicExporter", methodName : "bigloop"});
+		Global._trace(" bigloop",{ fileName : "BasicExporter.hx", lineNumber : 176, className : "BasicExporter", methodName : "bigloop"});
 		this.builder.down();
 		if(indent == null) indent = "-"; else indent = indent + "-";
 		var $native = new NativeArrayIterator(layers).haxeArray();
@@ -98,21 +119,21 @@ BasicExporter.prototype = {
 			var exported = null;
 			var factory = exp.ExportFactory.create(layer);
 			if(factory != null) exported = factory["export"]();
-			Global._trace("------------layer---------------" + layer.name(),{ fileName : "BasicExporter.hx", lineNumber : 166, className : "BasicExporter", methodName : "bigloop"});
+			Global._trace("------------layer---------------" + layer.name(),{ fileName : "BasicExporter.hx", lineNumber : 186, className : "BasicExporter", methodName : "bigloop"});
 			if(exported != null) {
-				Global._trace("--------------type-------------" + Std.string(exported.type),{ fileName : "BasicExporter.hx", lineNumber : 168, className : "BasicExporter", methodName : "bigloop"});
+				Global._trace("--------------type-------------" + Std.string(exported.type),{ fileName : "BasicExporter.hx", lineNumber : 188, className : "BasicExporter", methodName : "bigloop"});
 				this.builder.appendChild(exported);
-				Global._trace("name=" + indent + layer.name(),{ fileName : "BasicExporter.hx", lineNumber : 170, className : "BasicExporter", methodName : "bigloop"});
-				Global._trace("flat?" + Std.string((exported.behaviour & 1 << exp.Behave.Flat[1]) != 0),{ fileName : "BasicExporter.hx", lineNumber : 171, className : "BasicExporter", methodName : "bigloop"});
-				Global._trace("Sliced?" + Std.string((exported.behaviour & 1 << exp.Behave.Sliced[1]) != 0),{ fileName : "BasicExporter.hx", lineNumber : 172, className : "BasicExporter", methodName : "bigloop"});
+				Global._trace("name=" + indent + layer.name(),{ fileName : "BasicExporter.hx", lineNumber : 190, className : "BasicExporter", methodName : "bigloop"});
+				Global._trace("flat?" + Std.string((exported.behaviour & 1 << exp.Behave.Flat[1]) != 0),{ fileName : "BasicExporter.hx", lineNumber : 191, className : "BasicExporter", methodName : "bigloop"});
+				Global._trace("Sliced?" + Std.string((exported.behaviour & 1 << exp.Behave.Sliced[1]) != 0),{ fileName : "BasicExporter.hx", lineNumber : 192, className : "BasicExporter", methodName : "bigloop"});
 				if(helpers.Layer.isGroup(layer) && !((exported.behaviour & 1 << exp.Behave.Flat[1]) != 0)) {
-					Global._trace("isgroup and not Slice nor Flat",{ fileName : "BasicExporter.hx", lineNumber : 175, className : "BasicExporter", methodName : "bigloop"});
+					Global._trace("isgroup and not Slice nor Flat",{ fileName : "BasicExporter.hx", lineNumber : 195, className : "BasicExporter", methodName : "bigloop"});
 					this.bigloop(layer.layers(),indent);
 				}
 			}
 		}
 		this.builder.up();
-		Global._trace("end bigloop",{ fileName : "BasicExporter.hx", lineNumber : 183, className : "BasicExporter", methodName : "bigloop"});
+		Global._trace("end bigloop",{ fileName : "BasicExporter.hx", lineNumber : 203, className : "BasicExporter", methodName : "bigloop"});
 	}
 	,toXml: function(tree,xml) {
 		var $it0 = tree.childIterator();
@@ -122,7 +143,7 @@ BasicExporter.prototype = {
 			castednode = js.Boot.__cast(node , exp.ExportLayer);
 			var treeNode = tree.find(node);
 			var _node = null;
-			Global._trace(node.type,{ fileName : "BasicExporter.hx", lineNumber : 211, className : "BasicExporter", methodName : "toXml"});
+			Global._trace(node.type,{ fileName : "BasicExporter.hx", lineNumber : 231, className : "BasicExporter", methodName : "toXml"});
 			var _g = node.type;
 			switch(_g[1]) {
 			case 0:

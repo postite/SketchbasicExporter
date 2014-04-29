@@ -7,7 +7,7 @@ import exp.*;
 import haxe.EnumFlags;
 import exp.Behave;
 import exp.Config;
-
+using helpers.UI;
 
 class BasicExporter
 {
@@ -47,7 +47,9 @@ class BasicExporter
 
 		}
 		*/
+		if (config.cleanUp==true)
 		cleanup();
+
 		_trace("allPages?="+config.allPages);
 
 		var indent="*";
@@ -129,26 +131,44 @@ class BasicExporter
 		try ns.NSFileManager.defaultManager().removeItemAtPath(doc.dir()+"view/")
 			catch(msg:Dynamic)_trace("failde to clean view"+ msg);
 	}
+	function cleanupArtboardDir(art:MSArtboardGroup):Void
+	{
+		try ns.NSFileManager.defaultManager().removeItemAtPath(doc.dir()+"view/images/"+art.parentPage().name()+"/"+art.name()+"/" )
+			catch(msg:Dynamic)_trace("failde to clean view"+ msg);
+	}
 	
 
 	function ArtboardsLoop(arts:SketchArray<MSArtboardGroup>)
 	{
 		builder.down();
 		_trace("ArtboardsLoop");
-		var indent="+";
+		
 		var native=arts.iterator().haxeArray();
 		native.reverse();
-		for (art in native){
-			var exportable=exp.ExportFactory.create(art);
-			if(exportable!=null){
-			builder.appendChild(exportable.export());
-			_trace("befor bigloop name="+indent+art.name());
-			bigloop(art.layers());
+
+		if( config.allArtBoards!=true){
+			if(selection!=null && selection.firstObject()._class()==MSArtboardGroup){
+			cleanupArtboardDir(cast selection.firstObject());
+			processArtboard(cast selection.firstObject());
+			}else{
+			"selectan artboard\n aborting".alert();
+			throw ( "abort");
 			}
+		}else{
+		for (art in native)
+			processArtboard(art);
 		}
 		builder.up();
 		_trace("end Artboard loop");
 
+	}
+	function processArtboard(art:MSArtboardGroup){
+		var exportable=exp.ExportFactory.create(art);
+			if(exportable!=null){
+			builder.appendChild(exportable.export());
+			//_trace("befor bigloop name="+indent+art.name());
+			bigloop(art.layers());
+			}
 	}
 
 	function bigloop(layers:SketchArray<MSLayer>,?indent:String)
