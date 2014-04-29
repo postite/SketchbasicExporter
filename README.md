@@ -33,7 +33,9 @@ polygonal-ds (Tree)
 - scaling ( retina etc...)
 - masks
 - border boundings
-- make generic export Options ( global scale etc ...)
+- centered elements
+- rotation
+- make generic export Options ( global scale etc ...) //done 
 
 ## html:
 	- generate CSS
@@ -42,7 +44,7 @@ polygonal-ds (Tree)
 	- lots
 
 ## looping:
-	- choose between all artboards/Page or single 
+	- choose between all artboards/Page or single //done
 
 
 
