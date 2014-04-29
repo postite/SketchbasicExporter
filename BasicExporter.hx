@@ -18,11 +18,15 @@ class BasicExporter
 	static var aindent:String="";
 	var builder:TreeBuilder<Exportable>;
 	 var tree:TreeNode<Exportable>;
+	var config:Conf;
 	function new()
 	{
 		_trace("----------------start---------------------");
 
 
+		var conf= new Config();
+		conf.check();
+		config=exp.ExportFactory.config=conf.data;
 		/*
 		override flagging example
 		exp.ExportFactory.extract=function(name:String){
