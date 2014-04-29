@@ -55,6 +55,12 @@ class BasicExporter
 		tree= new TreeNode(cast new exp.ExportContainer(null));
 		builder= new TreeBuilder(tree);
 		var activePage=doc.currentPage();
+		
+		if(config.allPages!=true){
+			builder.appendChild(exp.ExportFactory.create(activePage).export());
+			ArtboardsLoop(cast activePage.artboards());
+		}else{
+			
 		for (page in doc.pages()){
 			doc.setCurrentPage(page);
 			builder.appendChild(exp.ExportFactory.create(page).export());
