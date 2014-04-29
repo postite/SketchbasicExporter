@@ -6,7 +6,7 @@ import de.polygonal.ds.TreeBuilder;
 import exp.*;
 import haxe.EnumFlags;
 import exp.Behave;
-
+import exp.Config;
 
 
 class BasicExporter
@@ -16,14 +16,13 @@ class BasicExporter
 	static var lindent:String="";
 	static var pindent:String="";
 	static var aindent:String="";
+
 	var builder:TreeBuilder<Exportable>;
-	 var tree:TreeNode<Exportable>;
+	var tree:TreeNode<Exportable>;
 	var config:Conf;
 	function new()
 	{
 		_trace("----------------start---------------------");
-
-
 		var conf= new Config();
 		conf.check();
 		config=exp.ExportFactory.config=conf.data;
@@ -49,7 +48,7 @@ class BasicExporter
 		}
 		*/
 		cleanup();
-		
+		_trace("allPages?="+config.allPages);
 
 		var indent="*";
 		tree= new TreeNode(cast new exp.ExportContainer(null));
@@ -63,12 +62,16 @@ class BasicExporter
 			
 		for (page in doc.pages()){
 			doc.setCurrentPage(page);
+
 			builder.appendChild(exp.ExportFactory.create(page).export());
 			_trace(indent+page.name());
 			ArtboardsLoop(cast page.artboards());
 			
+			
 		}
 		doc.setCurrentPage(activePage);
+		}
+		
 
 
 		// //log(tree.toString());

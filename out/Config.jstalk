@@ -1,0 +1,1409 @@
+// Config.jstalk (cmd alt ctrl c) 
+(function () { "use strict";
+var $hxClasses = {},$estr = function() { return js.Boot.__string_rec(this,''); };
+function $extend(from, fields) {
+	function Inherit() {} Inherit.prototype = from; var proto = new Inherit();
+	for (var name in fields) proto[name] = fields[name];
+	if( fields.toString !== Object.prototype.toString ) proto.toString = fields.toString;
+	return proto;
+}
+var Config = function() {
+	Global._trace("yo",{ fileName : "Config.hx", lineNumber : 30, className : "Config", methodName : "new"});
+};
+$hxClasses["Config"] = Config;
+Config.__name__ = true;
+Config.main = function() {
+	var app = new Config();
+};
+Config.prototype = {
+	check: function() {
+		Global._trace("check",{ fileName : "Config.hx", lineNumber : 35, className : "Config", methodName : "check"});
+		var settings = helpers.Document.loadJson(Global.doc,helpers.Document.dir(Global.doc) + "/pop.json");
+		if(settings != null) {
+			helpers.UI.alert("settings OK","cool");
+			this.data = settings;
+		} else this.create();
+	}
+	,create: function() {
+		var settings = JSON.stringify(Config.defaults);
+		helpers.Document.createText(Global.doc,settings,helpers.Document.dir(Global.doc) + "/pop.json");
+		helpers.UI.alert("settings created in dir","cool");
+		this.check();
+	}
+};
+var EReg = function(r,opt) {
+	opt = opt.split("u").join("");
+	this.r = new RegExp(r,opt);
+};
+$hxClasses["EReg"] = EReg;
+EReg.__name__ = true;
+EReg.prototype = {
+	match: function(s) {
+		if(this.r.global) this.r.lastIndex = 0;
+		this.r.m = this.r.exec(s);
+		this.r.s = s;
+		return this.r.m != null;
+	}
+	,matched: function(n) {
+		if(this.r.m != null && n >= 0 && n < this.r.m.length) return this.r.m[n]; else throw "EReg::matched";
+	}
+	,replace: function(s,by) {
+		return s.replace(this.r,by);
+	}
+};
+var Global = function() {
+};
+$hxClasses["Global"] = Global;
+Global.__name__ = true;
+Global.onelog = function(m,p) {
+	if(Type.resolveClass(p.className).one) {
+		Global._trace = function(m1,p1) {
+		};
+		log(m);
+		log(p.className + " " + p.lineNumber + "");
+	}
+};
+Global._trace = function(m,p) {
+	log(p.className + " " + p.lineNumber + "" + Std.string(m));
+};
+Global.log = function(m) {
+	log(m);
+};
+Global.writeToFile = function(content,path,atomically) {
+	if(atomically == null) atomically = false;
+	var nsContent = NSString.stringWithString(content);
+	return nsContent.writeToFile_atomically(path,atomically);
+};
+var HxOverrides = function() { };
+$hxClasses["HxOverrides"] = HxOverrides;
+HxOverrides.__name__ = true;
+HxOverrides.cca = function(s,index) {
+	var x = s.charCodeAt(index);
+	if(x != x) return undefined;
+	return x;
+};
+HxOverrides.substr = function(s,pos,len) {
+	if(pos != null && pos != 0 && len != null && len < 0) return "";
+	if(len == null) len = s.length;
+	if(pos < 0) {
+		pos = s.length + pos;
+		if(pos < 0) pos = 0;
+	} else if(len < 0) len = s.length + len - pos;
+	return s.substr(pos,len);
+};
+HxOverrides.iter = function(a) {
+	return { cur : 0, arr : a, hasNext : function() {
+		return this.cur < this.arr.length;
+	}, next : function() {
+		return this.arr[this.cur++];
+	}};
+};
+var IntIterator = function(min,max) {
+	this.min = min;
+	this.max = max;
+};
+$hxClasses["IntIterator"] = IntIterator;
+IntIterator.__name__ = true;
+var Lambda = function() { };
+$hxClasses["Lambda"] = Lambda;
+Lambda.__name__ = true;
+Lambda.array = function(it) {
+	var a = new Array();
+	var $it0 = $iterator(it)();
+	while( $it0.hasNext() ) {
+		var i = $it0.next();
+		a.push(i);
+	}
+	return a;
+};
+Lambda.filter = function(it,f) {
+	var l = new List();
+	var $it0 = $iterator(it)();
+	while( $it0.hasNext() ) {
+		var x = $it0.next();
+		if(f(x)) l.add(x);
+	}
+	return l;
+};
+var List = function() {
+	this.length = 0;
+};
+$hxClasses["List"] = List;
+List.__name__ = true;
+List.prototype = {
+	add: function(item) {
+		var x = [item];
+		if(this.h == null) this.h = x; else this.q[1] = x;
+		this.q = x;
+		this.length++;
+	}
+	,iterator: function() {
+		return { h : this.h, hasNext : function() {
+			return this.h != null;
+		}, next : function() {
+			if(this.h == null) return null;
+			var x = this.h[0];
+			this.h = this.h[1];
+			return x;
+		}};
+	}
+	,toString: function() {
+		var s = new StringBuf();
+		var first = true;
+		var l = this.h;
+		s.b += "{";
+		while(l != null) {
+			if(first) first = false; else s.b += ", ";
+			s.add(Std.string(l[0]));
+			l = l[1];
+		}
+		s.b += "}";
+		return s.b;
+	}
+	,map: function(f) {
+		var b = new List();
+		var l = this.h;
+		while(l != null) {
+			var v = l[0];
+			l = l[1];
+			b.add(f(v));
+		}
+		return b;
+	}
+};
+var IMap = function() { };
+$hxClasses["IMap"] = IMap;
+IMap.__name__ = true;
+Math.__name__ = true;
+var RecTools = function() { };
+$hxClasses["RecTools"] = RecTools;
+RecTools.__name__ = true;
+RecTools.getBounds = function(rect) {
+	return { x : rect.x(), y : rect.y(), width : rect.width(), height : rect.height()};
+};
+var Reflect = function() { };
+$hxClasses["Reflect"] = Reflect;
+Reflect.__name__ = true;
+Reflect.field = function(o,field) {
+	try {
+		return o[field];
+	} catch( e ) {
+		return null;
+	}
+};
+Reflect.isFunction = function(f) {
+	return typeof(f) == "function" && !(f.__name__ || f.__ename__);
+};
+var NativeArrayIterator = function(ar) {
+	this.array = ar;
+	this.i = 0;
+};
+$hxClasses["NativeArrayIterator"] = NativeArrayIterator;
+NativeArrayIterator.__name__ = true;
+NativeArrayIterator.prototype = {
+	next: function() {
+		return this.array[this.i++];
+	}
+	,hasNext: function() {
+		return this.i < this.array.length();
+	}
+	,reset: function() {
+		this.i = 0;
+	}
+	,keys: function() {
+		return new IntIterator(0,this.array.length());
+	}
+	,haxeArray: function() {
+		var a = [];
+		var $it0 = this;
+		while( $it0.hasNext() ) {
+			var e = $it0.next();
+			a.push(e);
+		}
+		return a;
+	}
+};
+var Std = function() { };
+$hxClasses["Std"] = Std;
+Std.__name__ = true;
+Std.string = function(s) {
+	return js.Boot.__string_rec(s,"");
+};
+Std.parseFloat = function(x) {
+	return parseFloat(x);
+};
+var StringBuf = function() {
+	this.b = "";
+};
+$hxClasses["StringBuf"] = StringBuf;
+StringBuf.__name__ = true;
+StringBuf.prototype = {
+	add: function(x) {
+		this.b += Std.string(x);
+	}
+};
+var StringTools = function() { };
+$hxClasses["StringTools"] = StringTools;
+StringTools.__name__ = true;
+StringTools.isSpace = function(s,pos) {
+	var c = HxOverrides.cca(s,pos);
+	return c > 8 && c < 14 || c == 32;
+};
+StringTools.ltrim = function(s) {
+	var l = s.length;
+	var r = 0;
+	while(r < l && StringTools.isSpace(s,r)) r++;
+	if(r > 0) return HxOverrides.substr(s,r,l - r); else return s;
+};
+StringTools.rtrim = function(s) {
+	var l = s.length;
+	var r = 0;
+	while(r < l && StringTools.isSpace(s,l - r - 1)) r++;
+	if(r > 0) return HxOverrides.substr(s,0,l - r); else return s;
+};
+StringTools.trim = function(s) {
+	return StringTools.ltrim(StringTools.rtrim(s));
+};
+StringTools.replace = function(s,sub,by) {
+	return s.split(sub).join(by);
+};
+var Type = function() { };
+$hxClasses["Type"] = Type;
+Type.__name__ = true;
+Type.resolveClass = function(name) {
+	var cl = $hxClasses[name];
+	if(cl == null || !cl.__name__) return null;
+	return cl;
+};
+Type.createEnum = function(e,constr,params) {
+	var f = Reflect.field(e,constr);
+	if(f == null) throw "No such constructor " + constr;
+	if(Reflect.isFunction(f)) {
+		if(params == null) throw "Constructor " + constr + " need parameters";
+		return f.apply(e,params);
+	}
+	if(params != null && params.length != 0) throw "Constructor " + constr + " does not need parameters";
+	return f;
+};
+Type.createEnumIndex = function(e,index,params) {
+	var c = e.__constructs__[index];
+	if(c == null) throw index + " is not a valid enum constructor index";
+	return Type.createEnum(e,c,params);
+};
+var bs = {};
+bs.BomberCommands = function() { };
+$hxClasses["bs.BomberCommands"] = bs.BomberCommands;
+bs.BomberCommands.__name__ = true;
+bs.BomberCommands.alert = function(msg,title) {
+	if(title == null) title = "Whoops";
+	var app = NSApplication.sharedApplication();
+	log(app);
+	app.displayDialog_withTitle(msg,title);
+};
+bs.BomberCommands.create_folder = function(path) {
+	var file_manager = NSFileManager.defaultManager();
+	try {
+		file_manager.createDirectoryAtPath_withIntermediateDirectories_attributes_error(path,false,null,null);
+	} catch( msg ) {
+		log("error creating folder" + path + "--" + Std.string(msg));
+	}
+};
+bs.BomberCommands.getFileFolder = function() {
+	var file_url = Global.doc.fileURL();
+	var file_path = file_url.path();
+	var file_folder = file_path.split(Global.doc.displayName())[0];
+	return file_folder;
+};
+bs.BomberCommands.getExportPath = function() {
+	var file_folder = bs.BomberCommands.getFileFolder();
+	var export_folder = file_folder + Global.doc.displayName().split(".sketch")[0] + "_export/";
+	return export_folder;
+};
+bs.BomberCommands.export_all_slices = function(format,path) {
+	if(path == null) path = bs.BomberCommands.getExportPath();
+	try {
+		var pages = Global.doc.pages();
+		var $it0 = new NativeArrayIterator(pages);
+		while( $it0.hasNext() ) {
+			var page = $it0.next();
+			Global.doc.setCurrentPage(page);
+			var slices = Global.doc.currentPage().allSlices();
+			var $it1 = new NativeArrayIterator(slices);
+			while( $it1.hasNext() ) {
+				var slice = $it1.next();
+				var path1 = path + slice.name() + "." + format;
+				Global.doc.saveArtboardOrSlice_toFile(slice,path1);
+			}
+		}
+	} catch( msg ) {
+		log("err" + Std.string(msg));
+	}
+};
+bs.BomberCommands.export_all_artboards = function(format,path) {
+	if(path == null) path = bs.BomberCommands.getExportPath();
+	var pages = Global.doc.pages();
+	var $it0 = new NativeArrayIterator(pages);
+	while( $it0.hasNext() ) {
+		var page = $it0.next();
+		Global.doc.setCurrentPage(page);
+		var pagename = Global.doc.currentPage().name();
+		var artBoards = page.artboards();
+		var $it1 = new NativeArrayIterator(artBoards);
+		while( $it1.hasNext() ) {
+			var art = $it1.next();
+			var path1 = path + "/" + pagename + art.name() + "." + format;
+			Global.doc.saveArtboardOrSlice_toFile(art,path1);
+		}
+	}
+};
+bs.BomberCommands.export_item = function(item,format,path) {
+};
+bs.BomberCommands.export_item_to_desktop = function(item,format) {
+};
+bs.BomberCommands.open_finder_in = function(path) {
+	try {
+		
+    var open_finder =[[NSTask alloc] init];
+
+    var open_finder_args = [NSArray arrayWithObjects:".", nil];
+
+    [open_finder setCurrentDirectoryPath:path];
+    [open_finder setLaunchPath:"/usr/bin/open"];
+    [open_finder setArguments:open_finder_args];
+    [open_finder launch]
+    [open_finder release];
+	} catch( msg ) {
+		log("error" + Std.string(msg));
+	}
+};
+bs.BomberCommands.reveal_finder_in = function(path) {
+	
+     var open_finder = [[NSTask alloc] init];
+     var open_finder_args = [NSArray arrayWithObjects:"-R", path, nil];
+
+     [open_finder setLaunchPath:"/usr/bin/open"];
+     [open_finder setArguments:open_finder_args];
+     [open_finder launch]
+     [open_finder release];
+};
+var exp = {};
+exp.Behave = { __ename__ : true, __constructs__ : ["Scale","Exportable","Mask","Bounded","Flat","Visible","Svg","Skip","Sliced"] };
+exp.Behave.Scale = ["Scale",0];
+exp.Behave.Scale.toString = $estr;
+exp.Behave.Scale.__enum__ = exp.Behave;
+exp.Behave.Exportable = ["Exportable",1];
+exp.Behave.Exportable.toString = $estr;
+exp.Behave.Exportable.__enum__ = exp.Behave;
+exp.Behave.Mask = ["Mask",2];
+exp.Behave.Mask.toString = $estr;
+exp.Behave.Mask.__enum__ = exp.Behave;
+exp.Behave.Bounded = ["Bounded",3];
+exp.Behave.Bounded.toString = $estr;
+exp.Behave.Bounded.__enum__ = exp.Behave;
+exp.Behave.Flat = ["Flat",4];
+exp.Behave.Flat.toString = $estr;
+exp.Behave.Flat.__enum__ = exp.Behave;
+exp.Behave.Visible = ["Visible",5];
+exp.Behave.Visible.toString = $estr;
+exp.Behave.Visible.__enum__ = exp.Behave;
+exp.Behave.Svg = ["Svg",6];
+exp.Behave.Svg.toString = $estr;
+exp.Behave.Svg.__enum__ = exp.Behave;
+exp.Behave.Skip = ["Skip",7];
+exp.Behave.Skip.toString = $estr;
+exp.Behave.Skip.__enum__ = exp.Behave;
+exp.Behave.Sliced = ["Sliced",8];
+exp.Behave.Sliced.toString = $estr;
+exp.Behave.Sliced.__enum__ = exp.Behave;
+exp.Exportable = function() { };
+$hxClasses["exp.Exportable"] = exp.Exportable;
+exp.Exportable.__name__ = true;
+exp.ExportLayer = function(layer) {
+	this.format = "png";
+	this.visible = true;
+	this.name = "no name";
+	this.name = Std.string(layer.name());
+	this.orig = layer;
+	this.type = exp.ExportTypes.Container;
+};
+$hxClasses["exp.ExportLayer"] = exp.ExportLayer;
+exp.ExportLayer.__name__ = true;
+exp.ExportLayer.__interfaces__ = [exp.Exportable];
+exp.ExportLayer.prototype = {
+	set_relx: function(f) {
+		return this.relx = Math.round(f * 100) / 100;
+	}
+	,set_rely: function(f) {
+		return this.rely = Math.round(f * 100) / 100;
+	}
+	,set_x: function(f) {
+		return this.x = Math.round(f * 100) / 100;
+	}
+	,set_y: function(f) {
+		return this.y = Math.round(f * 100) / 100;
+	}
+	,set_width: function(f) {
+		return this.width = Math.round(f * 100) / 100;
+	}
+	,set_height: function(f) {
+		return this.height = Math.round(f * 100) / 100;
+	}
+	,'export': function() {
+		Global._trace("export",{ fileName : "ExportLayer.hx", lineNumber : 44, className : "exp.ExportLayer", methodName : "export"});
+		if(this.orig != null && (this.behaviour & 1 << exp.Behave.Exportable[1]) != 0) {
+			if((this.behaviour & 1 << exp.Behave.Visible[1]) != 0) this.visible = true; else this.visible = false;
+			this.set_x(this.orig.absoluteRect().rulerX());
+			this.set_y(this.orig.absoluteRect().rulerY());
+			this.set_width(this.orig.frame().width());
+			this.set_height(this.orig.frame().height());
+			this.set_relx(this.orig.frame().x());
+			this.set_rely(this.orig.frame().y());
+			try {
+				if((this.behaviour & 1 << exp.Behave.Svg[1]) != 0) {
+					Global._trace("--------------svg style--------",{ fileName : "ExportLayer.hx", lineNumber : 56, className : "exp.ExportLayer", methodName : "export"});
+					this.src = helpers.Layer.exportSvg(this.orig,helpers.Document.dir(Global.doc) + "view/images");
+					this.type = exp.ExportTypes.Svg;
+					this.format = "svg";
+					this.src = this.relativeSrc(this.src);
+					return this;
+				}
+				if((this.behaviour & 1 << exp.Behave.Scale[1]) != 0) Global._trace("-------------------scale" + this.extractScaleFactor(this.name),{ fileName : "ExportLayer.hx", lineNumber : 64, className : "exp.ExportLayer", methodName : "export"});
+				if((this.behaviour & 1 << exp.Behave.Mask[1]) != 0) Global._trace("-------------------------has mask",{ fileName : "ExportLayer.hx", lineNumber : 66, className : "exp.ExportLayer", methodName : "export"});
+				if(!((this.behaviour & 1 << exp.Behave.Flat[1]) != 0)) {
+					if((this.behaviour & 1 << exp.Behave.Skip[1]) != 0) this.src = helpers.Layer["export"](this.orig,helpers.Document.dir(Global.doc) + "view/imuges",1); else this.src = helpers.Layer["export"](this.orig,helpers.Document.dir(Global.doc) + "view/images",1);
+				} else {
+					Global._trace("-------------------------has flat",{ fileName : "ExportLayer.hx", lineNumber : 75, className : "exp.ExportLayer", methodName : "export"});
+					this.src = helpers.Layer["export"](this.orig,helpers.Document.dir(Global.doc) + "view/images",1);
+					this.type = exp.ExportTypes.Image;
+				}
+				this.src = this.relativeSrc(this.src);
+				Global._trace("sr=" + this.src,{ fileName : "ExportLayer.hx", lineNumber : 80, className : "exp.ExportLayer", methodName : "export"});
+			} catch( err ) {
+				Global.log("Error=" + Std.string(err));
+			}
+			return this;
+		}
+		return null;
+	}
+	,normalize: function(f) {
+		return Math.round(f * 100) / 100;
+	}
+	,relativeSrc: function(absolutePath) {
+		var relative = StringTools.replace(absolutePath,helpers.Document.dir(Global.doc) + "view/","");
+		return relative;
+	}
+	,extractScaleFactor: function(name) {
+		var r = new EReg("([*]+\\d+)(((.|,)\\d+)+)?","");
+		r.match(name);
+		var ext = r.matched(0);
+		var p = StringTools.replace(ext,"*","");
+		return Std.parseFloat(p);
+	}
+	,toObj: function() {
+		return { name : this.name, x : this.x, y : this.y, width : this.width, height : this.height, src : this.src, imageType : this.format, text : this.text != null?this.text.toObj():null, relx : this.relx, rely : this.rely, children : []};
+	}
+};
+exp.ExportContainer = function(layer) {
+	if(layer != null) {
+		exp.ExportLayer.call(this,layer);
+		this.type = exp.ExportTypes.Container;
+	}
+};
+$hxClasses["exp.ExportContainer"] = exp.ExportContainer;
+exp.ExportContainer.__name__ = true;
+exp.ExportContainer.__interfaces__ = [exp.Exportable];
+exp.ExportContainer.__super__ = exp.ExportLayer;
+exp.ExportContainer.prototype = $extend(exp.ExportLayer.prototype,{
+	'export': function() {
+		if(this.orig != null && (this.behaviour & 1 << exp.Behave.Exportable[1]) != 0) {
+			if((this.behaviour & 1 << exp.Behave.Visible[1]) != 0) this.visible = true; else this.visible = false;
+			this.set_x(this.orig.absoluteRect().rulerX());
+			this.set_y(this.orig.absoluteRect().rulerY());
+			this.set_width(this.orig.frame().width());
+			this.set_height(this.orig.frame().height());
+			this.set_relx(this.orig.frame().x());
+			this.set_rely(this.orig.frame().y());
+			this.src = null;
+			return this;
+		}
+		return null;
+	}
+});
+exp.ExportArtBoard = function(layer) {
+	exp.ExportContainer.call(this,layer);
+	this.type = exp.ExportTypes.ArtBoard;
+};
+$hxClasses["exp.ExportArtBoard"] = exp.ExportArtBoard;
+exp.ExportArtBoard.__name__ = true;
+exp.ExportArtBoard.__interfaces__ = [exp.Exportable];
+exp.ExportArtBoard.__super__ = exp.ExportContainer;
+exp.ExportArtBoard.prototype = $extend(exp.ExportContainer.prototype,{
+	'export': function() {
+		this.set_x(2);
+		this.set_y(2);
+		this.set_relx(3);
+		this.set_rely(3);
+		this.set_width(100.1);
+		this.set_height(100);
+		return this;
+	}
+});
+exp.ExportFactory = function() { };
+$hxClasses["exp.ExportFactory"] = exp.ExportFactory;
+exp.ExportFactory.__name__ = true;
+exp.ExportFactory.create = function(origLayer) {
+	Global._trace("factory--------------createExport " + origLayer.name() + "-------------",{ fileName : "ExportFactory.hx", lineNumber : 27, className : "exp.ExportFactory", methodName : "create"});
+	var klass = helpers.Layer._class(origLayer);
+	helpers.UI.alert(Std.string(exp.ExportFactory.config),"config");
+	var flags = exp.ExportFactory.behaviour(origLayer);
+	var $export = null;
+	if((flags & 1 << exp.Behave.Exportable[1]) != 0) {
+		if(origLayer.isVisible()) flags |= 1 << exp.Behave.Visible[1];
+		if(origLayer.isLayerExportable() && !helpers.Layer.isArtBoard(origLayer)) {
+			Global._trace("isLayerExportable " + origLayer.name(),{ fileName : "ExportFactory.hx", lineNumber : 49, className : "exp.ExportFactory", methodName : "create"});
+			flags |= 1 << exp.Behave.Sliced[1];
+			flags |= 1 << exp.Behave.Flat[1];
+		}
+		if(helpers.Layer.isGroup(origLayer) && (function($this) {
+			var $r;
+			var _this = origLayer.layers();
+			$r = _this.length();
+			return $r;
+		}(this)) > 0) {
+			var lastLayerOf = origLayer.layers().firstObject();
+			Global._trace("lastLayerOf=",{ fileName : "ExportFactory.hx", lineNumber : 54, className : "exp.ExportFactory", methodName : "create"});
+			Global.log(helpers.Layer._class(lastLayerOf));
+			if(helpers.Layer._class(lastLayerOf) == MSSliceLayer) {
+				Global._trace("isSliced",{ fileName : "ExportFactory.hx", lineNumber : 58, className : "exp.ExportFactory", methodName : "create"});
+				flags |= 1 << exp.Behave.Sliced[1];
+				flags |= 1 << exp.Behave.Flat[1];
+				$export = new exp.ExportSlice(lastLayerOf);
+				flags |= 1 << exp.Behave.Flat[1];
+				$export.behaviour = flags;
+				return $export;
+			}
+		}
+		if(klass == MSSliceLayer) {
+			$export = new exp.ExportSlice(origLayer);
+			(flags & 1 << exp.Behave.Sliced[1]) != 0;
+			$export.behaviour = flags;
+			return $export;
+		}
+		if((flags & 1 << exp.Behave.Sliced[1]) != 0) {
+			Global._trace("behave Sliced",{ fileName : "ExportFactory.hx", lineNumber : 79, className : "exp.ExportFactory", methodName : "create"});
+			$export = new exp.ExportSlice(origLayer);
+			flags |= 1 << exp.Behave.Flat[1];
+			$export.behaviour = flags;
+			return $export;
+		}
+		Global._trace(klass,{ fileName : "ExportFactory.hx", lineNumber : 87, className : "exp.ExportFactory", methodName : "create"});
+		if(klass == MSPage) {
+			$export = new exp.ExportPage(origLayer);
+			$export.behaviour = flags;
+			return $export;
+		}
+		if(klass == MSArtboardGroup) {
+			$export = new exp.ExportArtBoard(origLayer);
+			$export.behaviour = flags;
+			return $export;
+		}
+		if(klass == MSTextLayer) {
+			$export = new exp.ExportText(origLayer);
+			$export.behaviour = flags;
+			return $export;
+		}
+		if(klass == MSShapeGroup || klass == MSBitmapLayer) {
+			$export = new exp.ExportImage(origLayer);
+			$export.behaviour = flags;
+			return $export;
+		}
+		if(klass == MSLayerGroup && !((flags & 1 << exp.Behave.Flat[1]) != 0)) {
+			$export = new exp.ExportContainer(origLayer);
+			Global.onelog("ExportContainer",{ fileName : "ExportFactory.hx", lineNumber : 114, className : "exp.ExportFactory", methodName : "create"});
+			$export.behaviour = flags;
+			return $export;
+		}
+		Global._trace("hact as regular layer",{ fileName : "ExportFactory.hx", lineNumber : 119, className : "exp.ExportFactory", methodName : "create"});
+		$export = new exp.ExportImage(origLayer);
+		$export.behaviour = flags;
+		return $export;
+	}
+	return null;
+};
+exp.ExportFactory.behaviour = function(orig) {
+	var name = orig.name();
+	var behaviour = exp.ExportFactory.extract(name);
+	return behaviour;
+};
+exp.ExportFactory.extract = function(name) {
+	var flags = 0;
+	Global._trace("extract=" + name,{ fileName : "ExportFactory.hx", lineNumber : 141, className : "exp.ExportFactory", methodName : "extract"});
+	var _g = exp.ExportFactory.beginWith(name);
+	switch(_g) {
+	case "*":
+		flags |= 1 << exp.Behave.Svg[1];
+		flags |= 1 << exp.Behave.Exportable[1];
+		flags |= 1 << exp.Behave.Flat[1];
+		break;
+	case "+":
+		flags |= 1 << exp.Behave.Exportable[1];
+		break;
+	case "_":
+		flags |= 1 << exp.Behave.Flat[1];
+		flags |= 1 << exp.Behave.Exportable[1];
+		break;
+	case "°":
+		flags |= 1 << exp.Behave.Skip[1];
+		flags |= 1 << exp.Behave.Exportable[1];
+		break;
+	case "-":
+		flags &= 268435455 - (1 << exp.Behave.Exportable[1]);
+		break;
+	default:
+		flags |= 1 << exp.Behave.Exportable[1];
+	}
+	if(helpers.StringSketch.startsWith(name,"m")) flags |= 1 << exp.Behave.Mask[1];
+	if(helpers.StringSketch.endsWith(name,"*2")) flags |= 1 << exp.Behave.Scale[1];
+	return flags;
+};
+exp.ExportFactory.beginWith = function(phrase) {
+	return phrase.charAt(0);
+};
+exp.ExportFactory.endWith = function(phrase) {
+	return HxOverrides.substr(phrase,-1,null);
+};
+exp.ExportImage = function(layer) {
+	exp.ExportLayer.call(this,layer);
+	this.type = exp.ExportTypes.Image;
+};
+$hxClasses["exp.ExportImage"] = exp.ExportImage;
+exp.ExportImage.__name__ = true;
+exp.ExportImage.__interfaces__ = [exp.Exportable];
+exp.ExportImage.__super__ = exp.ExportLayer;
+exp.ExportImage.prototype = $extend(exp.ExportLayer.prototype,{
+});
+exp.ExportPage = function(layer) {
+	exp.ExportContainer.call(this,layer);
+	this.type = exp.ExportTypes.Page;
+};
+$hxClasses["exp.ExportPage"] = exp.ExportPage;
+exp.ExportPage.__name__ = true;
+exp.ExportPage.__interfaces__ = [exp.Exportable];
+exp.ExportPage.__super__ = exp.ExportContainer;
+exp.ExportPage.prototype = $extend(exp.ExportContainer.prototype,{
+	'export': function() {
+		this.set_x(0);
+		this.set_y(0);
+		this.set_relx(0);
+		this.set_rely(0);
+		this.set_width(0.1);
+		this.set_height(0);
+		return this;
+	}
+});
+exp.ExportSlice = function(layer) {
+	exp.ExportLayer.call(this,layer);
+	this.type = exp.ExportTypes.Slice;
+};
+$hxClasses["exp.ExportSlice"] = exp.ExportSlice;
+exp.ExportSlice.__name__ = true;
+exp.ExportSlice.__interfaces__ = [exp.Exportable];
+exp.ExportSlice.__super__ = exp.ExportLayer;
+exp.ExportSlice.prototype = $extend(exp.ExportLayer.prototype,{
+	'export': function() {
+		Global.onelog(this.orig,{ fileName : "ExportSlice.hx", lineNumber : 28, className : "exp.ExportSlice", methodName : "export"});
+		var slice = null;
+		var layer = null;
+		var _g = helpers.Layer._class(this.orig);
+		switch(_g) {
+		case MSSliceLayer:
+			slice = this.orig;
+			layer = slice.parentGroup();
+			break;
+		case MSLayerGroup:
+			slice = Global.doc.sliceForRect(this.orig.frame());
+			layer = this.orig;
+			break;
+		case MSLayer:
+			slice = Global.doc.sliceForRect(this.orig.frame());
+			layer = this.orig;
+			break;
+		}
+		var slice1 = this.orig;
+		Global.onelog(slice1.absoluteRect().width() + "height=" + slice1.absoluteRect().height(),{ fileName : "ExportSlice.hx", lineNumber : 43, className : "exp.ExportSlice", methodName : "export"});
+		Global.onelog(slice1.absoluteRect().origin().x + "height=" + slice1.absoluteRect().origin().y,{ fileName : "ExportSlice.hx", lineNumber : 44, className : "exp.ExportSlice", methodName : "export"});
+		Global.onelog(slice1.absoluteRect().rulerX() + "height=" + slice1.absoluteRect().rulerY(),{ fileName : "ExportSlice.hx", lineNumber : 45, className : "exp.ExportSlice", methodName : "export"});
+		Global.onelog(slice1.relativeRect().origin.x + "y=" + slice1.relativeRect().origin.y,{ fileName : "ExportSlice.hx", lineNumber : 46, className : "exp.ExportSlice", methodName : "export"});
+		Global.onelog("parent=" + Std.string(slice1.ancestors()[(function($this) {
+			var $r;
+			var _this = slice1.ancestors();
+			$r = _this.length();
+			return $r;
+		}(this)) - 2].name()),{ fileName : "ExportSlice.hx", lineNumber : 47, className : "exp.ExportSlice", methodName : "export"});
+		Global.onelog("parent=" + slice1.parentGroup().name(),{ fileName : "ExportSlice.hx", lineNumber : 48, className : "exp.ExportSlice", methodName : "export"});
+		Global.onelog("shouldTrim=" + Std.string(slice1.exportOptions().shouldTrim()),{ fileName : "ExportSlice.hx", lineNumber : 49, className : "exp.ExportSlice", methodName : "export"});
+		Global.onelog("includedLayerIds=" + (function($this) {
+			var $r;
+			var _this1 = slice1.exportOptions().includedLayerIds();
+			$r = _this1.length();
+			return $r;
+		}(this)),{ fileName : "ExportSlice.hx", lineNumber : 50, className : "exp.ExportSlice", methodName : "export"});
+		Global.onelog("layerOptions=" + slice1.exportOptions().layerOptions(),{ fileName : "ExportSlice.hx", lineNumber : 54, className : "exp.ExportSlice", methodName : "export"});
+		var sizes = slice1.exportOptions().sizes();
+		Global.onelog("sizes=" + Std.string(slice1.exportOptions().sizes()),{ fileName : "ExportSlice.hx", lineNumber : 58, className : "exp.ExportSlice", methodName : "export"});
+		var $it0 = new NativeArrayIterator(sizes);
+		while( $it0.hasNext() ) {
+			var a = $it0.next();
+			Global.onelog(a.defaultName(),{ fileName : "ExportSlice.hx", lineNumber : 61, className : "exp.ExportSlice", methodName : "export"});
+			Global.onelog(a.parentLayer().name(),{ fileName : "ExportSlice.hx", lineNumber : 62, className : "exp.ExportSlice", methodName : "export"});
+			Global.onelog(a.isVectorExport(),{ fileName : "ExportSlice.hx", lineNumber : 63, className : "exp.ExportSlice", methodName : "export"});
+			Global.onelog(a.name(),{ fileName : "ExportSlice.hx", lineNumber : 64, className : "exp.ExportSlice", methodName : "export"});
+			Global.onelog(a.format(),{ fileName : "ExportSlice.hx", lineNumber : 65, className : "exp.ExportSlice", methodName : "export"});
+			Global.onelog(a.visibleScaleType(),{ fileName : "ExportSlice.hx", lineNumber : 66, className : "exp.ExportSlice", methodName : "export"});
+			Global.onelog(a.scale(),{ fileName : "ExportSlice.hx", lineNumber : 67, className : "exp.ExportSlice", methodName : "export"});
+		}
+		this.set_x(slice1.absoluteRect().rulerX());
+		this.set_y(slice1.absoluteRect().rulerY());
+		this.set_width(slice1.frame().width());
+		this.set_height(slice1.frame().height());
+		this.set_relx(slice1.frame().x());
+		this.set_rely(slice1.frame().y());
+		this.type = exp.ExportTypes.Image;
+		this.format = Std.string(slice1.exportOptions().sizes().firstObject().format());
+		this.src = helpers.Slice["export"](slice1,layer,helpers.Document.dir(Global.doc) + "view/images",sizes.firstObject().scale());
+		this.src = this.relativeSrc(this.src);
+		return this;
+	}
+});
+exp.Alignement = { __ename__ : true, __constructs__ : ["Left","Right","Center","Justify"] };
+exp.Alignement.Left = ["Left",0];
+exp.Alignement.Left.toString = $estr;
+exp.Alignement.Left.__enum__ = exp.Alignement;
+exp.Alignement.Right = ["Right",1];
+exp.Alignement.Right.toString = $estr;
+exp.Alignement.Right.__enum__ = exp.Alignement;
+exp.Alignement.Center = ["Center",2];
+exp.Alignement.Center.toString = $estr;
+exp.Alignement.Center.__enum__ = exp.Alignement;
+exp.Alignement.Justify = ["Justify",3];
+exp.Alignement.Justify.toString = $estr;
+exp.Alignement.Justify.__enum__ = exp.Alignement;
+exp.ExportText = function(layer) {
+	Global._trace("hello text",{ fileName : "ExportText.hx", lineNumber : 27, className : "exp.ExportText", methodName : "new"});
+	exp.ExportLayer.call(this,layer);
+	this.name = this.name + "____text";
+};
+$hxClasses["exp.ExportText"] = exp.ExportText;
+exp.ExportText.__name__ = true;
+exp.ExportText.__interfaces__ = [exp.Exportable];
+exp.ExportText.__super__ = exp.ExportLayer;
+exp.ExportText.prototype = $extend(exp.ExportLayer.prototype,{
+	'export': function() {
+		var layer = this.orig;
+		this.TP = { };
+		this.TP.text = layer.stringValue();
+		this.TP.fontSize = layer.fontSize();
+		this.TP.fontPostscriptName = "" + layer.fontPostscriptName();
+		Global._trace("pif",{ fileName : "ExportText.hx", lineNumber : 46, className : "exp.ExportText", methodName : "export"});
+		try {
+			Global._trace("try",{ fileName : "ExportText.hx", lineNumber : 50, className : "exp.ExportText", methodName : "export"});
+			this.TP.color = layer.style().fills().firstObject().color().hexValue();
+			this.TP.alpha = layer.style().fills().firstObject().color().alpha();
+		} catch( msg ) {
+			this.TP.color = layer.textColor().hexValue();
+			this.TP.alpha = layer.textColor().alpha();
+		}
+		try {
+			this.TP.textAlignment = this.Align(layer.textAlignment());
+			this.TP.characterSpacing = layer.characterSpacing();
+			this.TP.lineSpacing = layer.lineSpacing();
+			this.TP.toObj = $bind(this,this.toObject);
+			this.text = this.TP;
+			Global.log(layer.font());
+		} catch( msg1 ) {
+			Global._trace("font problem" + Std.string(msg1),{ fileName : "ExportText.hx", lineNumber : 69, className : "exp.ExportText", methodName : "export"});
+		}
+		this.type = exp.ExportTypes.Text;
+		Global._trace(" font stuff",{ fileName : "ExportText.hx", lineNumber : 72, className : "exp.ExportText", methodName : "export"});
+		return exp.ExportLayer.prototype["export"].call(this);
+	}
+	,toObject: function() {
+		return { text : this.TP.text.toString(), color : this.TP.color.toString(), fontSize : this.TP.fontSize, fontPostscriptName : this.TP.fontPostscriptName, textAlignment : this.TP.textAlignment, characterSpacing : this.TP.characterSpacing, lineSpacing : this.TP.lineSpacing, alpha : Math.round(this.TP.alpha * 100) / 100};
+	}
+	,Align: function(code) {
+		var e = Type.createEnumIndex(exp.Alignement,code);
+		return e[0];
+	}
+});
+exp.ExportTypes = { __ename__ : true, __constructs__ : ["Page","ArtBoard","Text","Image","Svg","Container","Slice"] };
+exp.ExportTypes.Page = ["Page",0];
+exp.ExportTypes.Page.toString = $estr;
+exp.ExportTypes.Page.__enum__ = exp.ExportTypes;
+exp.ExportTypes.ArtBoard = ["ArtBoard",1];
+exp.ExportTypes.ArtBoard.toString = $estr;
+exp.ExportTypes.ArtBoard.__enum__ = exp.ExportTypes;
+exp.ExportTypes.Text = ["Text",2];
+exp.ExportTypes.Text.toString = $estr;
+exp.ExportTypes.Text.__enum__ = exp.ExportTypes;
+exp.ExportTypes.Image = ["Image",3];
+exp.ExportTypes.Image.toString = $estr;
+exp.ExportTypes.Image.__enum__ = exp.ExportTypes;
+exp.ExportTypes.Svg = ["Svg",4];
+exp.ExportTypes.Svg.toString = $estr;
+exp.ExportTypes.Svg.__enum__ = exp.ExportTypes;
+exp.ExportTypes.Container = ["Container",5];
+exp.ExportTypes.Container.toString = $estr;
+exp.ExportTypes.Container.__enum__ = exp.ExportTypes;
+exp.ExportTypes.Slice = ["Slice",6];
+exp.ExportTypes.Slice.toString = $estr;
+exp.ExportTypes.Slice.__enum__ = exp.ExportTypes;
+var haxe = {};
+haxe.ds = {};
+haxe.ds.IntMap = function() {
+	this.h = { };
+};
+$hxClasses["haxe.ds.IntMap"] = haxe.ds.IntMap;
+haxe.ds.IntMap.__name__ = true;
+haxe.ds.IntMap.__interfaces__ = [IMap];
+haxe.ds.IntMap.prototype = {
+	set: function(key,value) {
+		this.h[key] = value;
+	}
+	,get: function(key) {
+		return this.h[key];
+	}
+};
+var helpers = {};
+helpers.Artboard = function() { };
+$hxClasses["helpers.Artboard"] = helpers.Artboard;
+helpers.Artboard.__name__ = true;
+helpers.Artboard.numberOfExportableGroups = function(a) {
+	var number = 0;
+	var $it0 = (function($this) {
+		var $r;
+		var _this = a.layers();
+		$r = new NativeArrayIterator(_this);
+		return $r;
+	}(this));
+	while( $it0.hasNext() ) {
+		var layer = $it0.next();
+		if(helpers.Layer.isExportable(layer)) number++;
+	}
+	return number;
+};
+helpers.Artboard.isGroup = function(a) {
+	return true;
+};
+helpers.Artboard.groups = function(a) {
+	Global._trace("groups",{ fileName : "Artboard.hx", lineNumber : 29, className : "helpers.Artboard", methodName : "groups"});
+	var hxLayers = ((function($this) {
+		var $r;
+		var _this = a.layers();
+		$r = new NativeArrayIterator(_this);
+		return $r;
+	}(this))).haxeArray();
+	var grouped = Lambda.filter(hxLayers,function(layer) {
+		return helpers.Layer.isGroup(layer);
+	});
+	Global._trace("grouped=" + Std.string(grouped),{ fileName : "Artboard.hx", lineNumber : 34, className : "helpers.Artboard", methodName : "groups"});
+	var exportables = Lambda.array(grouped.map(helpers.Artboard.genExportable));
+	Global._trace("exportables" + Std.string(exportables),{ fileName : "Artboard.hx", lineNumber : 36, className : "helpers.Artboard", methodName : "groups"});
+	return exportables;
+};
+helpers.Artboard.genExportable = function(layerGroup) {
+	Global._trace("genExportable",{ fileName : "Artboard.hx", lineNumber : 43, className : "helpers.Artboard", methodName : "genExportable"});
+	return exp.ExportFactory.create(layerGroup);
+};
+helpers.Artboard.hideOtherLayers = function(a,currentLayer,withChilds) {
+	if(withChilds == null) withChilds = true;
+	Global.onelog("------------hideOthers-----------for " + currentLayer.name(),{ fileName : "Artboard.hx", lineNumber : 55, className : "helpers.Artboard", methodName : "hideOtherLayers"});
+	var parents = [];
+	var node = currentLayer.parentGroup();
+	while(node != a) {
+		if(node.isVisible()) parents.push(node);
+		node = node.parentGroup();
+	}
+	var $it0 = (function($this) {
+		var $r;
+		var _this = a.layers();
+		$r = new NativeArrayIterator(_this);
+		return $r;
+	}(this));
+	while( $it0.hasNext() ) {
+		var layer = $it0.next();
+		if(currentLayer != layer) {
+			var layerParent = layer.parentGroup();
+			if(withChilds) {
+				if(layer.isVisible()) try {
+					layer.setIsVisible(false);
+					helpers.Artboard.setHiddenLayers(a,layer);
+				} catch( err ) {
+				}
+			} else {
+			}
+		}
+	}
+	helpers.Artboard.hideSiblings(a,currentLayer,currentLayer,withChilds);
+	var _g = 0;
+	while(_g < parents.length) {
+		var p = parents[_g];
+		++_g;
+		try {
+			p.setIsVisible(true);
+		} catch( err1 ) {
+			Global._trace(err1,{ fileName : "Artboard.hx", lineNumber : 91, className : "helpers.Artboard", methodName : "hideOtherLayers"});
+		}
+	}
+	parents = null;
+};
+helpers.Artboard.hideParentsSiblings = function(a,currentLayer,origLayer,withChilds) {
+	var active = currentLayer.parentGroup();
+	while(active.parentGroup() != a) {
+		helpers.Artboard.hideSiblings(a,active,origLayer,withChilds);
+		active = active.parentGroup();
+	}
+};
+helpers.Artboard.hideSiblings = function(a,currentLayer,origLayer,withChilds) {
+	var $it0 = (function($this) {
+		var $r;
+		var _this = currentLayer.parentGroup().layers();
+		$r = new NativeArrayIterator(_this);
+		return $r;
+	}(this));
+	while( $it0.hasNext() ) {
+		var child = $it0.next();
+		if(child != currentLayer) {
+			Global.onelog("hide" + child.name(),{ fileName : "Artboard.hx", lineNumber : 117, className : "helpers.Artboard", methodName : "hideSiblings"});
+			if(child.isVisible()) helpers.Artboard.hideParentsSiblings(a,child,origLayer,withChilds);
+			helpers.Artboard.setHiddenLayers(a,child);
+			child.setIsVisible(false);
+		}
+	}
+};
+helpers.Artboard.showHiddenLayers = function(a) {
+	Global.onelog("--------------show---------------",{ fileName : "Artboard.hx", lineNumber : 128, className : "helpers.Artboard", methodName : "showHiddenLayers"});
+	var $it0 = helpers.Artboard.getHiddenLayers(a).iterator();
+	while( $it0.hasNext() ) {
+		var hidden = $it0.next();
+		hidden.setIsVisible(true);
+	}
+};
+helpers.Artboard.getHiddenLayers = function(a) {
+	var key = a.hash();
+	return helpers.Artboard.hiddenLayers.get(key);
+};
+helpers.Artboard.setHiddenLayers = function(a,hiddenLayer) {
+	if(helpers.Artboard.getHiddenLayers(a) == null) {
+		var key = a.hash();
+		var value = new List();
+		helpers.Artboard.hiddenLayers.set(key,value);
+	}
+	var liste = null;
+	if((function($this) {
+		var $r;
+		var key1 = a.hash();
+		$r = helpers.Artboard.hiddenLayers.get(key1);
+		return $r;
+	}(this)) != null) {
+		var key2 = a.hash();
+		liste = helpers.Artboard.hiddenLayers.get(key2);
+	} else liste = new List();
+	liste.add(hiddenLayer);
+	var key3 = a.hash();
+	helpers.Artboard.hiddenLayers.set(key3,liste);
+};
+helpers.Document = function() { };
+$hxClasses["helpers.Document"] = helpers.Document;
+helpers.Document.__name__ = true;
+helpers.Document.dir = function(d) {
+	return bs.BomberCommands.getFileFolder();
+};
+helpers.Document.pluginPath = function(d) {
+	return [[[CHPluginsController alloc] init] fullPluginPath];
+};
+helpers.Document.filePath = function(d) {
+	return d.fileURL().path();
+};
+helpers.Document.numberOfExportableGroups = function(d) {
+	var number = 0;
+	var $it0 = (function($this) {
+		var $r;
+		var _this = d.artboards();
+		$r = new NativeArrayIterator(_this);
+		return $r;
+	}(this));
+	while( $it0.hasNext() ) {
+		var arts = $it0.next();
+		number += helpers.Artboard.numberOfExportableGroups(arts);
+	}
+	return number;
+};
+helpers.Document.createText = function(d,content,_path) {
+	
+ 		var someContent = NSString.stringWithString_(content)
+		var path = _path
+		someContent.dataUsingEncoding_(NSUTF8StringEncoding).writeToFile_atomically_(path, true)
+	;
+};
+helpers.Document.loadTxt = function(d,file) {
+	var fileContent = NSString.stringWithContentsOfFile_encoding_error(file,NSUTF8StringEncoding,null);
+	return fileContent;
+};
+helpers.Document.loadJson = function(d,file) {
+	var fileContent = helpers.Document.loadTxt(d,file);
+	var t = JSON.parse(fileContent);
+	return t;
+};
+helpers.Document.stockInUserData = function(d,key,data) {
+};
+helpers.Document.getInUserData = function(d,key) {
+	return null;
+};
+helpers.Document.usersDefaults = function(d) {
+};
+helpers.Layer = function() { };
+$hxClasses["helpers.Layer"] = helpers.Layer;
+helpers.Layer.__name__ = true;
+helpers.Layer.isExportable = function(layer) {
+	Global._trace(layer,{ fileName : "Layer.hx", lineNumber : 13, className : "helpers.Layer", methodName : "isExportable"});
+	var isGroup = helpers.Layer.isGroup(layer);
+	var cleanName = helpers.StringSketch.clean(layer.name());
+	var _isExportable = !helpers.StringSketch.startsWith(cleanName,"-");
+	var force = helpers.StringSketch.startsWith(cleanName,"+");
+	return isGroup && _isExportable || force;
+};
+helpers.Layer.setMapName = function(layer,val) {
+	try {
+		var key = layer.hash();
+		helpers.Layer.mapName.set(key,val);
+	} catch( err ) {
+		log(err);
+	}
+};
+helpers.Layer.getMapName = function(layer) {
+	var key = layer.hash();
+	return helpers.Layer.mapName.get(key);
+	return "pop";
+};
+helpers.Layer._class = function(layer) {
+	return layer.class();
+};
+helpers.Layer.isArtBoard = function(l) {
+	var klass = helpers.Layer._class(l);
+	return klass == MSArtboardGroup;
+};
+helpers.Layer.isGroup = function(l) {
+	var klass = helpers.Layer._class(l);
+	return klass == MSLayerGroup;
+};
+helpers.Layer.isText = function(l) {
+	var klass = helpers.Layer._class(l);
+	return klass == MSTextLayer;
+};
+helpers.Layer["export"] = function(layer,path,factor) {
+	var invisible = false;
+	var artboard = layer.parentArtboard();
+	var page = layer.parentPage();
+	helpers.Artboard.hideOtherLayers(artboard,layer);
+	if(!layer.isVisible()) {
+		invisible = true;
+		layer.setIsVisible(true);
+	}
+	path = path + "/" + page.name() + "/" + artboard.name() + "/" + helpers.StringSketch.clean(layer.name()) + ".png";
+	Global._trace(path + "factor=" + (factor == null?"null":"" + factor),{ fileName : "Layer.hx", lineNumber : 70, className : "helpers.Layer", methodName : "export"});
+	if(factor != null) factor = factor; else factor = 1;
+	var slice = helpers.Layer.withFactor(layer,factor);
+	Global.doc.saveArtboardOrSlice_toFile(slice,path);
+	if(invisible) layer.setIsVisible(false);
+	try {
+		helpers.Artboard.showHiddenLayers(artboard);
+	} catch( msg ) {
+		Global._trace(msg,{ fileName : "Layer.hx", lineNumber : 79, className : "helpers.Layer", methodName : "export"});
+	}
+	return path;
+};
+helpers.Layer.exportSvg = function(layer,path) {
+	var factor = null;
+	path = helpers.StringSketch.cleanPath(path);
+	var invisible = false;
+	var artboard = layer.parentArtboard();
+	var page = layer.parentPage();
+	helpers.Artboard.hideOtherLayers(artboard,layer);
+	if(!layer.isVisible()) {
+		invisible = true;
+		layer.setIsVisible(true);
+	}
+	path = path + "/" + page.name() + "/" + artboard.name() + "/" + helpers.StringSketch.clean(layer.name()) + ".svg";
+	if(factor != null) factor = factor; else factor = 1;
+	var slice = helpers.Layer.withFactor(layer,factor);
+	Global.doc.saveArtboardOrSlice_toFile(slice,path);
+	if(invisible) layer.setIsVisible(false);
+	try {
+		helpers.Artboard.showHiddenLayers(artboard);
+	} catch( msg ) {
+		Global._trace(msg,{ fileName : "Layer.hx", lineNumber : 104, className : "helpers.Layer", methodName : "exportSvg"});
+	}
+	return path;
+};
+helpers.Layer.exportFlat = function(layer,path,factor) {
+	return helpers.Layer["export"](layer,path,factor);
+};
+helpers.Layer.withFactor = function(layer,factor) {
+	var copy = layer.duplicate();
+	var frame = copy.frame();
+	Global._trace("here",{ fileName : "Layer.hx", lineNumber : 115, className : "helpers.Layer", methodName : "withFactor"});
+	var rect = null;
+	try {
+		rect = copy.rectByAccountingForStyleSize(copy.absoluteRect().rect());
+	} catch( msg ) {
+		Global._trace(msg,{ fileName : "Layer.hx", lineNumber : 118, className : "helpers.Layer", methodName : "withFactor"});
+	}
+	var slice = MSSlice.sliceWithRect_scale(rect,factor);
+	Global._trace(copy,{ fileName : "Layer.hx", lineNumber : 121, className : "helpers.Layer", methodName : "withFactor"});
+	try {
+		copy.removeFromParent();
+	} catch( msg1 ) {
+		log(msg1);
+	}
+	return slice;
+};
+helpers.Format = { __ename__ : true, __constructs__ : ["Png","Svg","Jpg","Pdf","Tiff","Eps"] };
+helpers.Format.Png = ["Png",0];
+helpers.Format.Png.toString = $estr;
+helpers.Format.Png.__enum__ = helpers.Format;
+helpers.Format.Svg = ["Svg",1];
+helpers.Format.Svg.toString = $estr;
+helpers.Format.Svg.__enum__ = helpers.Format;
+helpers.Format.Jpg = ["Jpg",2];
+helpers.Format.Jpg.toString = $estr;
+helpers.Format.Jpg.__enum__ = helpers.Format;
+helpers.Format.Pdf = ["Pdf",3];
+helpers.Format.Pdf.toString = $estr;
+helpers.Format.Pdf.__enum__ = helpers.Format;
+helpers.Format.Tiff = ["Tiff",4];
+helpers.Format.Tiff.toString = $estr;
+helpers.Format.Tiff.__enum__ = helpers.Format;
+helpers.Format.Eps = ["Eps",5];
+helpers.Format.Eps.toString = $estr;
+helpers.Format.Eps.__enum__ = helpers.Format;
+helpers.Slice = function() { };
+$hxClasses["helpers.Slice"] = helpers.Slice;
+helpers.Slice.__name__ = true;
+helpers.Slice["export"] = function(slice,orig,path,factor) {
+	var options = { };
+	var firstOption = slice.exportOptions().sizes().firstObject();
+	options.format = Type.createEnum(helpers.Format,helpers.StringSketch.capitalize(Std.string(firstOption.format())));
+	options.suffix = firstOption.name();
+	options.scale = firstOption.scale();
+	var layer = orig;
+	Global.onelog("layer" + layer.name(),{ fileName : "Slice.hx", lineNumber : 45, className : "helpers.Slice", methodName : "export"});
+	var invisible = false;
+	var artboard = layer.parentArtboard();
+	var page = layer.parentPage();
+	helpers.Artboard.hideOtherLayers(artboard,layer);
+	if(!layer.isVisible()) {
+		invisible = true;
+		layer.setIsVisible(true);
+	}
+	path = path + "/" + page.name() + "/" + artboard.name() + "/slices/" + helpers.StringSketch.clean(layer.name()) + "." + Std.string(options.format).toLowerCase();
+	Global._trace(path + "factor=" + (factor == null?"null":"" + factor),{ fileName : "Slice.hx", lineNumber : 56, className : "helpers.Slice", methodName : "export"});
+	var factor1 = options.scale;
+	var exportslice = helpers.Layer.withFactor(slice,factor1);
+	Global.doc.saveArtboardOrSlice_toFile(exportslice,path);
+	if(invisible) layer.setIsVisible(false);
+	try {
+		helpers.Artboard.showHiddenLayers(artboard);
+	} catch( msg ) {
+		Global._trace(msg,{ fileName : "Slice.hx", lineNumber : 66, className : "helpers.Slice", methodName : "export"});
+	}
+	return path;
+};
+helpers.StringSketch = function() { };
+$hxClasses["helpers.StringSketch"] = helpers.StringSketch;
+helpers.StringSketch.__name__ = true;
+helpers.StringSketch.camelize = function(str) {
+	throw "not yet implemented";
+};
+helpers.StringSketch.capitalize = function(str) {
+	return str.charAt(0).toUpperCase() + HxOverrides.substr(str,1,null);
+};
+helpers.StringSketch.classify = function(str) {
+	throw "not yet implemented";
+};
+helpers.StringSketch.cleanPath = function(str) {
+	var r = new EReg("/+$","");
+	return r.replace(str,"");
+};
+helpers.StringSketch.clean = function(str) {
+	var r = new EReg("\\s+","g");
+	var trimed = StringTools.trim(str);
+	return r.replace(trimed," ");
+};
+helpers.StringSketch.endsWith = function(str,ends) {
+	if(ends == "") return true;
+	if(str == null || ends == null) return false;
+	if(str == null) str = "null"; else str = "" + str;
+	if(ends == null) ends = "null"; else ends = "" + ends;
+	return str.length >= ends.length && HxOverrides.substr(str,str.length - ends.length,null) == ends;
+};
+helpers.StringSketch.escapeRegExp = function(str) {
+	throw "not yet implemented";
+};
+helpers.StringSketch.include = function(str,needle) {
+	throw "not yet implemented";
+};
+helpers.StringSketch.isBlank = function(str) {
+	throw "not yet implemented";
+};
+helpers.StringSketch.javaId = function(str) {
+	if(str == null) str = "";
+	str = str.toLowerCase();
+	str = helpers.StringSketch.clean(str);
+	var r = new EReg(" ","g");
+	str = r.replace(str,"_");
+	var r2 = new EReg("[^a-z0-9_]","g");
+	return r2.replace(str,"");
+	return str;
+};
+helpers.StringSketch.split = function(str,modifier) {
+	throw "not yet implemented";
+};
+helpers.StringSketch.startsWith = function(str,starts) {
+	var str1;
+	if(str == null) str1 = "null"; else str1 = "" + str;
+	if(starts == "") return true;
+	if(str1 == null || starts == null) return false;
+	var $is = str1.length >= starts.length && HxOverrides.substr(str1,0,starts.length) == starts;
+	return $is;
+};
+helpers.StringSketch.titleize = function(str) {
+	throw "not yet implemented";
+};
+helpers.StringSketch.trim = function(str,characters) {
+	throw "not yet implemented";
+};
+helpers.StringSketch.getTextTag = function(text) {
+	var textname;
+	if(text == null) textname = "null"; else textname = "" + text;
+	var tags = new EReg("^<(a|blockquote|div|h1|h2|h3|h4|h5|h6|label|p|span)>","");
+	if(tags.match(textname)) {
+		var name = tags.replace(textname,"");
+		var tag = tags.matched(0);
+		var tagName = tags.matched(1);
+		return { name : name, tag : tag, tagName : tagName};
+	}
+	return { name : textname, tag : "<p>", tagName : "p"};
+};
+helpers.UI = function() { };
+$hxClasses["helpers.UI"] = helpers.UI;
+helpers.UI.__name__ = true;
+helpers.UI.alert = function(msg,title) {
+	bs.BomberCommands.alert(msg,title);
+};
+var js = {};
+js.Boot = function() { };
+$hxClasses["js.Boot"] = js.Boot;
+js.Boot.__name__ = true;
+js.Boot.__string_rec = function(o,s) {
+	if(o == null) return "null";
+	if(s.length >= 5) return "<...>";
+	var t = typeof(o);
+	if(t == "function" && (o.__name__ || o.__ename__)) t = "object";
+	switch(t) {
+	case "object":
+		if(o instanceof Array) {
+			if(o.__enum__) {
+				if(o.length == 2) return o[0];
+				var str = o[0] + "(";
+				s += "\t";
+				var _g1 = 2;
+				var _g = o.length;
+				while(_g1 < _g) {
+					var i = _g1++;
+					if(i != 2) str += "," + js.Boot.__string_rec(o[i],s); else str += js.Boot.__string_rec(o[i],s);
+				}
+				return str + ")";
+			}
+			var l = o.length;
+			var i1;
+			var str1 = "[";
+			s += "\t";
+			var _g2 = 0;
+			while(_g2 < l) {
+				var i2 = _g2++;
+				str1 += (i2 > 0?",":"") + js.Boot.__string_rec(o[i2],s);
+			}
+			str1 += "]";
+			return str1;
+		}
+		var tostr;
+		try {
+			tostr = o.toString;
+		} catch( e ) {
+			return "???";
+		}
+		if(tostr != null && tostr != Object.toString) {
+			var s2 = o.toString();
+			if(s2 != "[object Object]") return s2;
+		}
+		var k = null;
+		var str2 = "{\n";
+		s += "\t";
+		var hasp = o.hasOwnProperty != null;
+		for( var k in o ) {
+		if(hasp && !o.hasOwnProperty(k)) {
+			continue;
+		}
+		if(k == "prototype" || k == "__class__" || k == "__super__" || k == "__interfaces__" || k == "__properties__") {
+			continue;
+		}
+		if(str2.length != 2) str2 += ", \n";
+		str2 += s + k + " : " + js.Boot.__string_rec(o[k],s);
+		}
+		s = s.substring(1);
+		str2 += "\n" + s + "}";
+		return str2;
+	case "function":
+		return "<function>";
+	case "string":
+		return o;
+	default:
+		return String(o);
+	}
+};
+var ns = {};
+ns.Response = { __ename__ : true, __constructs__ : ["YES","NO"] };
+ns.Response.YES = ["YES",0];
+ns.Response.YES.toString = $estr;
+ns.Response.YES.__enum__ = ns.Response;
+ns.Response.NO = ["NO",1];
+ns.Response.NO.toString = $estr;
+ns.Response.NO.__enum__ = ns.Response;
+function $iterator(o) { if( o instanceof Array ) return function() { return HxOverrides.iter(o); }; return typeof(o.iterator) == 'function' ? $bind(o,o.iterator) : o.iterator; }
+var $_, $fid = 0;
+function $bind(o,m) { if( m == null ) return null; if( m.__id__ == null ) m.__id__ = $fid++; var f; if( o.hx__closures__ == null ) o.hx__closures__ = {}; else f = o.hx__closures__[m.__id__]; if( f == null ) { f = function(){ return f.method.apply(f.scope, arguments); }; f.scope = o; f.method = m; o.hx__closures__[m.__id__] = f; } return f; }
+Global.doc = doc;
+Global.selection = selection;
+Math.NaN = Number.NaN;
+Math.NEGATIVE_INFINITY = Number.NEGATIVE_INFINITY;
+Math.POSITIVE_INFINITY = Number.POSITIVE_INFINITY;
+$hxClasses.Math = Math;
+Math.isFinite = function(i) {
+	return isFinite(i);
+};
+Math.isNaN = function(i1) {
+	return isNaN(i1);
+};
+String.__name__ = true;
+$hxClasses.Array = Array;
+Array.__name__ = true;
+Config.defaults = { scale : 3, format : "png", forceConfig : true, allArtBoards : true, allPages : true, cleanUp : true, forceSlices : false};
+Global.tracable = ["helpers.Artboard"];
+exp.ExportFactory.one = false;
+exp.ExportSlice.one = false;
+helpers.Artboard.one = false;
+helpers.Artboard.hiddenLayers = new haxe.ds.IntMap();
+helpers.Layer.mapName = new haxe.ds.IntMap();
+helpers.Slice.one = false;
+Config.main();
+})();
