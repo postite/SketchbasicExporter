@@ -148,7 +148,6 @@ class BasicExporter
 
 		if( config.allArtBoards!=true){
 			if(selection!=null && selection.firstObject()._class()==MSArtboardGroup){
-			cleanupArtboardDir(cast selection.firstObject());
 			processArtboard(cast selection.firstObject());
 			}else{
 			"selectan artboard\n aborting".alert();
@@ -165,6 +164,7 @@ class BasicExporter
 	function processArtboard(art:MSArtboardGroup){
 		var exportable=exp.ExportFactory.create(art);
 			if(exportable!=null){
+			cleanupArtboardDir(cast selection.firstObject());
 			builder.appendChild(exportable.export());
 			//_trace("befor bigloop name="+indent+art.name());
 			bigloop(art.layers());
