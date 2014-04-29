@@ -81,10 +81,7 @@ BasicExporter.prototype = {
 		var $native = new NativeArrayIterator(arts).haxeArray();
 		$native.reverse();
 		if(this.config.allArtBoards != true) {
-			if(Global.selection != null && helpers.Layer._class(Global.selection.firstObject()) == MSArtboardGroup) {
-				this.cleanupArtboardDir(Global.selection.firstObject());
-				this.processArtboard(Global.selection.firstObject());
-			} else {
+			if(Global.selection != null && helpers.Layer._class(Global.selection.firstObject()) == MSArtboardGroup) this.processArtboard(Global.selection.firstObject()); else {
 				helpers.UI.alert("selectan artboard\n aborting");
 				throw "abort";
 			}
@@ -97,11 +94,12 @@ BasicExporter.prototype = {
 			}
 		}
 		this.builder.up();
-		Global._trace("end Artboard loop",{ fileName : "BasicExporter.hx", lineNumber : 162, className : "BasicExporter", methodName : "ArtboardsLoop"});
+		Global._trace("end Artboard loop",{ fileName : "BasicExporter.hx", lineNumber : 161, className : "BasicExporter", methodName : "ArtboardsLoop"});
 	}
 	,processArtboard: function(art) {
 		var exportable = exp.ExportFactory.create(art);
 		if(exportable != null) {
+			this.cleanupArtboardDir(Global.selection.firstObject());
 			this.builder.appendChild(exportable["export"]());
 			this.bigloop(art.layers());
 		}
@@ -3284,15 +3282,12 @@ exp.Config.prototype = {
 	data: null
 	,check: function() {
 		Global._trace("check",{ fileName : "Config.hx", lineNumber : 43, className : "exp.Config", methodName : "check"});
-		var settings = helpers.Document.loadJson(Global.doc,helpers.Document.dir(Global.doc) + "/pop.json");
-		if(settings != null) {
-			helpers.UI.alert("settings OK","cool");
-			this.data = settings;
-		} else this.create();
+		var settings = helpers.Document.loadJson(Global.doc,helpers.Document.dir(Global.doc) + "/settings_" + Global.doc.displayName() + ".json");
+		if(settings != null) this.data = settings; else this.create();
 	}
 	,create: function() {
 		var settings = JSON.stringify(exp.Config.defaults);
-		helpers.Document.createText(Global.doc,settings,helpers.Document.dir(Global.doc) + "/pop.json");
+		helpers.Document.createText(Global.doc,settings,helpers.Document.dir(Global.doc) + "/settings_" + Global.doc.displayName() + ".json");
 		helpers.UI.alert("settings created in dir","cool");
 		this.check();
 	}
@@ -4812,7 +4807,7 @@ helpers.Slice["export"] = function(slice,orig,path,factor,config) {
 		invisible = true;
 		layer.setIsVisible(true);
 	}
-	path = path + "/" + page.name() + "/" + artboard.name() + "/slices/" + helpers.StringSketch.clean(layer.name()) + "." + Std.string(options.format).toLowerCase();
+	path = path + "/" + page.name() + "/" + artboard.name() + "/" + helpers.StringSketch.clean(layer.name()) + "." + Std.string(options.format).toLowerCase();
 	Global._trace(path + "factor=" + (factor == null?"null":"" + factor),{ fileName : "Slice.hx", lineNumber : 57, className : "helpers.Slice", methodName : "export"});
 	if(config.forceSlices) {
 		var factor1 = options.scale;
