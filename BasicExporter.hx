@@ -20,6 +20,10 @@ class BasicExporter
 	var builder:TreeBuilder<Exportable>;
 	var tree:TreeNode<Exportable>;
 	var config:Conf;
+
+
+	var activeArtboard:MSArtboardGroup;
+	var activePage:MSPage;
 	function new()
 	{
 		_trace("----------------start---------------------");
@@ -55,7 +59,7 @@ class BasicExporter
 		var indent="*";
 		tree= new TreeNode(cast new exp.ExportContainer(null));
 		builder= new TreeBuilder(tree);
-		var activePage=doc.currentPage();
+		activePage=doc.currentPage();
 		
 		if(config.allPages!=true){
 			builder.appendChild(exp.ExportFactory.create(activePage).export());
@@ -162,6 +166,7 @@ class BasicExporter
 
 	}
 	function processArtboard(art:MSArtboardGroup){
+		activeArtboard=art;
 		var exportable=exp.ExportFactory.create(art);
 			if(exportable!=null){
 			cleanupArtboardDir(cast selection.firstObject());
@@ -310,7 +315,12 @@ class BasicExporter
 	}
 	function exportFramer(content:String)
 	{
+		if(config.allArtBoards!=true){
+			_trace("singleArtBoard" +doc.dir()+"view/images/"+activePage.name()+"/"+activeArtboard.name()+"/framer-"+activeArtboard.name()+".json");
+			Global.writeToFile(content,doc.dir()+"view/images/"+activePage.name()+"/"+activeArtboard.name()+"/framer-"+activeArtboard.name()+".json");
+		}else{
 		Global.writeToFile(content,doc.dir()+"/view/framer-"+doc.displayName()+".json");
+		}
 	}
 
 
