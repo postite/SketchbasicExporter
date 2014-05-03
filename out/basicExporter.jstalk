@@ -654,38 +654,37 @@ exp.ExportLayer.prototype = {
 		return this.height = Math.round(f * 100) / 100;
 	}
 	,'export': function() {
-		Global._trace("export",{ fileName : "ExportLayer.hx", lineNumber : 44, className : "exp.ExportLayer", methodName : "export"});
+		Global._trace("export",{ fileName : "ExportLayer.hx", lineNumber : 46, className : "exp.ExportLayer", methodName : "export"});
 		if(this.orig != null && (this.behaviour & 1 << exp.Behave.Exportable[1]) != 0) {
 			if((this.behaviour & 1 << exp.Behave.Visible[1]) != 0) this.visible = true; else this.visible = false;
-			this.set_x(this.orig.absoluteRect().rulerX());
-			this.set_y(this.orig.absoluteRect().rulerY());
-			this.set_width(this.orig.frame().width());
-			this.set_height(this.orig.frame().height());
-			this.set_relx(this.orig.frame().x());
-			this.set_rely(this.orig.frame().y());
 			try {
 				if((this.behaviour & 1 << exp.Behave.Svg[1]) != 0) {
-					Global._trace("--------------svg style--------",{ fileName : "ExportLayer.hx", lineNumber : 56, className : "exp.ExportLayer", methodName : "export"});
-					this.src = helpers.Layer.exportSvg(this.orig,helpers.Document.dir(Global.doc) + "view/images",this.config);
+					Global._trace("--------------svg style--------",{ fileName : "ExportLayer.hx", lineNumber : 55, className : "exp.ExportLayer", methodName : "export"});
+					this.exportData = helpers.Layer.exportSvg(this.orig,helpers.Document.dir(Global.doc) + "view/images",this.config);
 					this.type = exp.ExportTypes.Svg;
 					this.format = "svg";
-					this.src = this.relativeSrc(this.src);
+					this.src = this.relativeSrc(this.exportData.path);
 					return this;
 				}
-				if((this.behaviour & 1 << exp.Behave.Scale[1]) != 0) Global._trace("-------------------scale" + this.extractScaleFactor(this.name),{ fileName : "ExportLayer.hx", lineNumber : 64, className : "exp.ExportLayer", methodName : "export"});
-				if((this.behaviour & 1 << exp.Behave.Mask[1]) != 0) Global._trace("-------------------------has mask",{ fileName : "ExportLayer.hx", lineNumber : 66, className : "exp.ExportLayer", methodName : "export"});
+				if((this.behaviour & 1 << exp.Behave.Scale[1]) != 0) Global._trace("-------------------scale" + this.extractScaleFactor(this.name),{ fileName : "ExportLayer.hx", lineNumber : 63, className : "exp.ExportLayer", methodName : "export"});
+				if((this.behaviour & 1 << exp.Behave.Mask[1]) != 0) Global._trace("-------------------------has mask",{ fileName : "ExportLayer.hx", lineNumber : 65, className : "exp.ExportLayer", methodName : "export"});
 				if(!((this.behaviour & 1 << exp.Behave.Flat[1]) != 0)) {
-					if((this.behaviour & 1 << exp.Behave.Skip[1]) != 0) this.src = helpers.Layer["export"](this.orig,helpers.Document.dir(Global.doc) + "view/imuges",1,this.config); else this.src = helpers.Layer["export"](this.orig,helpers.Document.dir(Global.doc) + "view/images",1,this.config);
+					if((this.behaviour & 1 << exp.Behave.Skip[1]) != 0) this.exportData = helpers.Layer["export"](this.orig,helpers.Document.dir(Global.doc) + "view/imuges",1,this.config); else this.exportData = helpers.Layer["export"](this.orig,helpers.Document.dir(Global.doc) + "view/images",1,this.config);
 				} else {
-					Global._trace("-------------------------has flat",{ fileName : "ExportLayer.hx", lineNumber : 75, className : "exp.ExportLayer", methodName : "export"});
-					this.src = helpers.Layer["export"](this.orig,helpers.Document.dir(Global.doc) + "view/images",1,this.config);
+					Global._trace("-------------------------has flat",{ fileName : "ExportLayer.hx", lineNumber : 74, className : "exp.ExportLayer", methodName : "export"});
+					this.exportData = helpers.Layer["export"](this.orig,helpers.Document.dir(Global.doc) + "view/images",1,this.config);
 					this.type = exp.ExportTypes.Image;
 				}
-				this.src = this.relativeSrc(this.src);
-				Global._trace("sr=" + this.src,{ fileName : "ExportLayer.hx", lineNumber : 80, className : "exp.ExportLayer", methodName : "export"});
+				this.src = this.relativeSrc(this.exportData.path);
 			} catch( err ) {
 				Global.log("Error=" + Std.string(err));
 			}
+			this.set_x(this.exportData.sliced.bounds.x);
+			this.set_y(this.exportData.sliced.bounds.y);
+			this.set_width(this.exportData.sliced.bounds.width);
+			this.set_height(this.exportData.sliced.bounds.height);
+			this.set_relx(this.exportData.sliced.bounds.relx);
+			this.set_rely(this.exportData.sliced.bounds.rely);
 			return this;
 		}
 		return null;
@@ -934,12 +933,12 @@ exp.ExportSlice.prototype = $extend(exp.ExportLayer.prototype,{
 		Global.onelog(slice1.absoluteRect().origin().x + "height=" + slice1.absoluteRect().origin().y,{ fileName : "ExportSlice.hx", lineNumber : 44, className : "exp.ExportSlice", methodName : "export"});
 		Global.onelog(slice1.absoluteRect().rulerX() + "height=" + slice1.absoluteRect().rulerY(),{ fileName : "ExportSlice.hx", lineNumber : 45, className : "exp.ExportSlice", methodName : "export"});
 		Global.onelog(slice1.relativeRect().origin.x + "y=" + slice1.relativeRect().origin.y,{ fileName : "ExportSlice.hx", lineNumber : 46, className : "exp.ExportSlice", methodName : "export"});
-		Global.onelog("parent=" + Std.string(slice1.ancestors()[(function($this) {
+		Global.onelog("parent=" + slice1.ancestors()[(function($this) {
 			var $r;
 			var _this = slice1.ancestors();
 			$r = _this.length();
 			return $r;
-		}(this)) - 2].name()),{ fileName : "ExportSlice.hx", lineNumber : 47, className : "exp.ExportSlice", methodName : "export"});
+		}(this)) - 2].name(),{ fileName : "ExportSlice.hx", lineNumber : 47, className : "exp.ExportSlice", methodName : "export"});
 		Global.onelog("parent=" + slice1.parentGroup().name(),{ fileName : "ExportSlice.hx", lineNumber : 48, className : "exp.ExportSlice", methodName : "export"});
 		Global.onelog("shouldTrim=" + Std.string(slice1.exportOptions().shouldTrim()),{ fileName : "ExportSlice.hx", lineNumber : 49, className : "exp.ExportSlice", methodName : "export"});
 		Global.onelog("includedLayerIds=" + (function($this) {
@@ -1223,18 +1222,17 @@ helpers.Layer["export"] = function(layer,path,factor,config) {
 		invisible = true;
 		layer.setIsVisible(true);
 	}
-	path = path + "/" + page.name() + "/" + artboard.name() + "/" + helpers.StringSketch.clean(layer.name()) + ".png";
-	Global._trace(path + "factor=" + (factor == null?"null":"" + factor),{ fileName : "Layer.hx", lineNumber : 70, className : "helpers.Layer", methodName : "export"});
+	path = path + "/" + page.name() + "/" + artboard.name() + "/" + helpers.StringSketch.clean(layer.name()) + "." + config.format;
 	factor = config.scale;
-	var slice = helpers.Layer.withFactor(layer,factor);
-	Global.doc.saveArtboardOrSlice_toFile(slice,path);
+	var sliced = helpers.Layer.withFactor(layer,factor);
+	Global.doc.saveArtboardOrSlice_toFile(sliced.slice,path);
 	if(invisible) layer.setIsVisible(false);
 	try {
 		helpers.Artboard.showHiddenLayers(artboard);
 	} catch( msg ) {
-		Global._trace(msg,{ fileName : "Layer.hx", lineNumber : 81, className : "helpers.Layer", methodName : "export"});
+		Global._trace(msg,{ fileName : "Layer.hx", lineNumber : 94, className : "helpers.Layer", methodName : "export"});
 	}
-	return path;
+	return { path : path, sliced : sliced};
 };
 helpers.Layer.exportSvg = function(layer,path,config) {
 	var factor = null;
@@ -1242,41 +1240,25 @@ helpers.Layer.exportSvg = function(layer,path,config) {
 	var invisible = false;
 	var artboard = layer.parentArtboard();
 	var page = layer.parentPage();
-	helpers.Artboard.hideOtherLayers(artboard,layer);
-	if(!layer.isVisible()) {
-		invisible = true;
-		layer.setIsVisible(true);
-	}
 	path = path + "/" + page.name() + "/" + artboard.name() + "/" + helpers.StringSketch.clean(layer.name()) + ".svg";
 	factor = config.scale;
-	var slice = helpers.Layer.withFactor(layer,factor);
-	Global.doc.saveArtboardOrSlice_toFile(slice,path);
-	if(invisible) layer.setIsVisible(false);
-	try {
-		helpers.Artboard.showHiddenLayers(artboard);
-	} catch( msg ) {
-		Global._trace(msg,{ fileName : "Layer.hx", lineNumber : 106, className : "helpers.Layer", methodName : "exportSvg"});
-	}
-	return path;
+	var sliced = helpers.Layer.withFactor(layer,factor);
+	Global.doc.saveArtboardOrSlice_toFile(sliced.slice,path);
+	return { path : path, sliced : sliced};
 };
 helpers.Layer.withFactor = function(layer,factor) {
 	var copy = layer.duplicate();
 	var frame = copy.frame();
-	Global._trace("here",{ fileName : "Layer.hx", lineNumber : 117, className : "helpers.Layer", methodName : "withFactor"});
+	Global._trace("here",{ fileName : "Layer.hx", lineNumber : 131, className : "helpers.Layer", methodName : "withFactor"});
 	var rect = null;
-	try {
-		rect = copy.rectByAccountingForStyleSize(copy.absoluteRect().rect());
-	} catch( msg ) {
-		Global._trace(msg,{ fileName : "Layer.hx", lineNumber : 120, className : "helpers.Layer", methodName : "withFactor"});
-	}
-	var slice = MSSlice.sliceWithRect_scale(rect,factor);
-	Global._trace(copy,{ fileName : "Layer.hx", lineNumber : 123, className : "helpers.Layer", methodName : "withFactor"});
-	try {
-		copy.removeFromParent();
-	} catch( msg1 ) {
-		log(msg1);
-	}
-	return slice;
+	MSSliceTrimming.trimSlice_toFitLayers(copy,null);
+	var bounds = { x : copy.absoluteRect().rulerX(), y : copy.absoluteRect().rulerY(), width : copy.frame().width(), height : copy.frame().height(), relx : copy.frame().x(), rely : copy.frame().y()};
+	copy.frame().setX(-100000);
+	copy.frame().setY(-100000);
+	var rect1 = copy.rectByAccountingForStyleSize(copy.absoluteRect().rect());
+	var slice = MSSlice.sliceWithRect_scale(rect1,factor);
+	Global.doc.addLayer(copy);
+	return { slice : slice, bounds : bounds};
 };
 helpers.Format = { __ename__ : true, __constructs__ : ["Png","Svg","Jpg","Pdf","Tiff","Eps"] };
 helpers.Format.Png = ["Png",0];
@@ -1322,7 +1304,7 @@ helpers.Slice["export"] = function(slice,orig,path,factor,config) {
 		var factor1 = options.scale;
 	} else factor = config.scale;
 	var exportslice = helpers.Layer.withFactor(slice,factor);
-	Global.doc.saveArtboardOrSlice_toFile(exportslice,path);
+	Global.doc.saveArtboardOrSlice_toFile(exportslice.slice,path);
 	if(invisible) layer.setIsVisible(false);
 	try {
 		helpers.Artboard.showHiddenLayers(artboard);
@@ -1513,7 +1495,7 @@ Bool.__ename__ = ["Bool"];
 var Class = $hxClasses.Class = { __name__ : ["Class"]};
 var Enum = { };
 de.polygonal.ds.HashKey._counter = 0;
-exp.Config.defaults = { scale : 3, format : "png", forceConfig : true, allArtBoards : true, allPages : true, cleanUp : true, forceSlices : false};
+exp.Config.defaults = { scale : 1, format : "png", forceConfig : true, allArtBoards : false, allPages : false, cleanUp : false, forceSlices : false};
 exp.ExportFactory.config = exp.Config.defaults;
 helpers.Artboard.hiddenLayers = new haxe.ds.IntMap();
 BasicExporter.main();

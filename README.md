@@ -27,18 +27,34 @@ polygonal-ds (Tree)
 
 
 #TODO:
+- clean stuff
 - use sketchApi as haxelib
 - use it on a real use case 
 - define more Behaviours ... adjust them.
-- scaling ( retina etc...)
+- scaling ( retina etc...) //done
 - masks
-- border boundings
+- border boundings //done
 - centered elements
 - rotation
 - make generic export Options ( global scale etc ...) //done 
+- export path in config 
+- launch Settings in textEdit shortcut 
+- investigate move copy instead of toggling others visibility ( should be faster ) but require move element outside of artboard
+- investigate change layer color
+#feature request 
+- ask for symbols a la flash ( can resize without sync)
+- ask for Layers properties ( color, data, addFields )
+- create artboard api feature 
+- implement skip feature ( move children in parent and set new coordinates)
+- check trim container if no export 
+
+#bug:
+- invisible layers are made visible even if !exportable
+- symbols temp copy scale at export ( should break copy)
 
 ## html:
 	- generate CSS
+
 	- investingate Bootstraping
 ## Framer:
 	- lots
