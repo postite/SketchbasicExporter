@@ -123,7 +123,7 @@ class BasicExporter
 		}catch(msg:Dynamic){
 			_trace("error for framer"+msg);
 		}
-
+		bs.BomberCommands.open_finder_in(doc.dir()+"/view/images/"+activePage.name()+"/"+activeArtboard.name()+"/");
 		//log( xm.firstChild().nodeName);
 		_trace("done");
 	}
