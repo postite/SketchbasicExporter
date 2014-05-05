@@ -7,13 +7,17 @@ import exp.*;
 import haxe.EnumFlags;
 import exp.Behave;
 
-class HTMLExporter
+class HTMLExporter extends BasicExporter
 {
 
 	var html:Xml;
 	public function new()
 	{
-		
+		super();
+		generate();
+		var xml:Xml=Xml.createElement("div");
+		html=toHtml(tree,xml);
+		exportHtml();
 	}
 
 	public function toHtml(tree:TreeNode<Exportable>,xml:Xml):Xml
@@ -48,12 +52,19 @@ class HTMLExporter
 				case Text:
 					 _node.set("class","text");
 					 position="relative";
-					 var tag=helpers.StringSketch.getTextTag(node.name);
-					 var texte=  cast (node,exp.ExportText).text.text;
-					// _node.insertChild(Xml.createCData(cast (node,exp.ExportText).text.text),0);
-					 var subXml=Xml.parse('<${tag.tagName} class="${tag.name}">$texte</${tag.tagName}>');
+					var tag=helpers.StringSketch.getTextTag(node.name);
+					 var texteProps:exp.ExportText.TextProperties=  cast (node,exp.ExportText).text;
+					// log( texteProps);
+					var style='font-size:${texteProps.fontSize}px;
+								font-family:${texteProps.fontPostscriptName};
+								text-align:${texteProps.textAlignment};
+								color:#${texteProps.color};
+								';
+					//var style='';
+					//// _node.insertChild(Xml.createCData(cast (node,exp.ExportText).text.text),0);
+					 var subXml=Xml.parse('<${tag.tagName} class="${tag.name}" style="$style">${texteProps.text}</${tag.tagName}>');
 					 	//cast (node,exp.ExportText).text.text),0);
-						
+						//var subXml=Xml.parse("<p/>");
 					//_node.insertChild(subXml,0);
 					_node=subXml;
 				case Image:
@@ -63,6 +74,8 @@ class HTMLExporter
 					_node.insertChild(img,0);
 				case Container:
 					_node.set("class","container");
+				case _:
+				_trace("badtype");
 					
 			}
 			if(position=="absolute")
@@ -83,15 +96,16 @@ class HTMLExporter
 	}
 
 
-	public function export()
+	public function exportHtml()
 	{
-	
 		var t= new HtmlView();
 		t.title=doc.displayName();
 		t.content=html.toString();
 		var export = t.execute();
-		Global.writeToFile(export,doc.dir()+"/view/"+doc.displayName()+".html");
-	
+		Global.writeToFile(export,doc.dir()+doc.displayName()+".html");
+	}
+	public static function main(){
+		new HTMLExporter();
 	}
 }
 
