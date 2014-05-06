@@ -127,7 +127,7 @@ class HTMLExporter extends BasicExporter
 		t.title=doc.displayName();
 		t.content=html.toString();
 		var export = t.execute();
-		Global.writeToFile(export,doc.dir()+doc.displayName()+".html");
+		Global.writeToFile(export,config.imagesPath+activePage.name()+"/"+activeArtboard.name()+"/"+activeArtboard.name()+".html");
 	}
 	public static function main(){
 		new HTMLExporter();
