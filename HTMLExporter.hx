@@ -33,6 +33,16 @@ class HTMLExporter extends BasicExporter
 		if (config.cleanUp==true)
 		cleanup();
 	}
+
+	function launch():Void
+	{
+		var open_task=ns.NSTask.alloc().init();
+			var open_task_args=ns.NSArray.arrayWithObjects(config.imagesPath+activePage.name()+"/"+activeArtboard.name()+"/"+activeArtboard.name()+".html");
+			//open_task.setCurrentDirectoryPath(framer_folder);
+			open_task.setLaunchPath("/usr/bin/open");
+			open_task.setArguments(open_task_args);
+			untyped _trace( open_task.launchPath());
+			open_task.launch();
 	}
 
 	public function toHtml(tree:TreeNode<Exportable>,xml:Xml):Xml
