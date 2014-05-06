@@ -1,5 +1,5 @@
 
--main BasicExporter
+-main FramerExporter
 -lib sketchApi
 -lib erazor
 -lib polygonal-ds
