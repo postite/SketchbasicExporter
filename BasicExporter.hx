@@ -18,18 +18,16 @@ class BasicExporter
 	static var aindent:String="";
 
 	var builder:TreeBuilder<Exportable>;
-	var tree:TreeNode<Exportable>;
+	public var tree:TreeNode<Exportable>;
 	var config:Conf;
 
 
 	var activeArtboard:MSArtboardGroup;
 	var activePage:MSPage;
-	function new()
+	public function new()
 	{
 		_trace("----------------start---------------------");
-		var conf= new Config();
-		conf.check();
-		config=exp.ExportFactory.config=conf.data;
+		
 		/*
 		override flagging example
 		exp.ExportFactory.extract=function(name:String){
@@ -51,33 +49,8 @@ class BasicExporter
 
 		}
 		*/
-		if (config.cleanUp==true)
-		cleanup();
-
-		_trace("allPages?="+config.allPages);
-
-		var indent="*";
-		tree= new TreeNode(cast new exp.ExportContainer(null));
-		builder= new TreeBuilder(tree);
-		activePage=doc.currentPage();
 		
-		if(config.allPages!=true){
-			builder.appendChild(exp.ExportFactory.create(activePage).export());
-			ArtboardsLoop(cast activePage.artboards());
-		}else{
-			
-		for (page in doc.pages()){
-			doc.setCurrentPage(page);
 
-			builder.appendChild(exp.ExportFactory.create(page).export());
-			_trace(indent+page.name());
-			ArtboardsLoop(cast page.artboards());
-			
-			
-		}
-		doc.setCurrentPage(activePage);
-		}
-		
 
 
 		// //log(tree.toString());
@@ -114,25 +87,66 @@ class BasicExporter
 		// catch(msg:Dynamic){
 		// 	log("error"+msg);
 		// }
-		try{
+		// try{
 			
-			var framer= new FramerExporter();
-			var jsonframe=framer.toJson(tree);
+		// 	var framer= new FramerExporter();
+		// 	var jsonframe=framer.toJson(tree);
 
-			exportFramer( haxe.Json.stringify(jsonframe));
-		}catch(msg:Dynamic){
-			_trace("error for framer"+msg);
+		// 	exportFramer( haxe.Json.stringify(jsonframe));
+		// }catch(msg:Dynamic){
+		// 	_trace("error for framer"+msg);
+		// }
+		// var openPath:String=doc.dir()+"/view/images/"+activePage.name()+"/";
+		// if(config.allArtBoards!=true)
+		// 	openPath=openPath+activeArtboard.name()+"/";
+		
+		// bs.BomberCommands.open_finder_in(openPath);
+		// //log( xm.firstChild().nodeName);
+		// _trace("done");
+		setup();
+	}
+	function setup():Void
+	{
+		var conf= new Config();
+		conf.check();
+		config=exp.ExportFactory.config=conf.data;
+
+		if (config.cleanUp==true)
+		cleanup();
+
+		_trace("allPages?="+config.allPages);
+	}
+	function generate(){
+
+		var indent="*";
+		tree= new TreeNode(cast new exp.ExportContainer(null));
+		builder= new TreeBuilder(tree);
+		activePage=doc.currentPage();
+		
+		if(config.allPages!=true){
+			builder.appendChild(exp.ExportFactory.create(activePage).export());
+			ArtboardsLoop(cast activePage.artboards());
+		}else{
+			
+		for (page in doc.pages()){
+			doc.setCurrentPage(page);
+
+			builder.appendChild(exp.ExportFactory.create(page).export());
+			_trace(indent+page.name());
+			ArtboardsLoop(cast page.artboards());
+			
+			
 		}
-		bs.BomberCommands.open_finder_in(doc.dir()+"/view/images/"+activePage.name()+"/"+activeArtboard.name()+"/");
-		//log( xm.firstChild().nodeName);
-		_trace("done");
+		doc.setCurrentPage(activePage);
+		}
+		_trace("exporter done");
 	}
 
 	
 	//	path = path +"/"+page.name()+"/"+artboard.name()+"/"+  layer.name().clean()+ '.png';
 		//do not know what it does !
 	function cleanup(){
-		try ns.NSFileManager.defaultManager().removeItemAtPath(doc.dir()+"view/")
+		try ns.NSFileManager.defaultManager().removeItemAtPath(config.imagesPath)
 			catch(msg:Dynamic)_trace("failde to clean view"+ msg);
 	}
 	function cleanupArtboardDir(art:MSArtboardGroup):Void
@@ -313,19 +327,11 @@ class BasicExporter
 	{
 		Global.writeToFile(content,doc.dir()+"/view/"+doc.displayName()+".json");
 	}
-	function exportFramer(content:String)
-	{
-		if(config.allArtBoards!=true){
-			_trace("singleArtBoard" +doc.dir()+"view/images/"+activePage.name()+"/"+activeArtboard.name()+"/framer-"+activeArtboard.name()+".json");
-			Global.writeToFile(content,doc.dir()+"view/images/"+activePage.name()+"/"+activeArtboard.name()+"/framer-"+activeArtboard.name()+".json");
-		}else{
-		Global.writeToFile(content,doc.dir()+"/view/framer-"+doc.displayName()+".json");
-		}
-	}
+	
 
 
-	static public function main()
-	{
-		var app = new BasicExporter();
-	}
+	// static public function main()
+	// {
+	// 	var app = new BasicExporter();
+	// }
 }
