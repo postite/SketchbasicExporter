@@ -75,15 +75,23 @@ class HTMLExporter extends BasicExporter
 					img.set("src",node.src);
 					_node.insertChild(img,0);
 				case Text:
+				_trace("isText" +node.name);
 					 _node.set("class","text");
-					 position="relative";
+					 //position="relative";
 					var tag=helpers.StringSketch.getTextTag(node.name);
 					 var texteProps:exp.ExportText.TextProperties=  cast (node,exp.ExportText).text;
 					// log( texteProps);
+					/*line-height is a hack for first line 1.5 is completly arbitrary TODO*/
+					//also width +3 is arbitrary (webfonts)
+					var lineHeight=(node.height>= texteProps.lineSpacing*1.5)? texteProps.lineSpacing : node.height;
 					var style='font-size:${texteProps.fontSize}px;
 								font-family:${texteProps.fontPostscriptName};
 								text-align:${texteProps.textAlignment};
+								line-height:${lineHeight}px;
 								color:#${texteProps.color};
+								top:${node.rely}px;
+								left:${node.relx}px;
+								width:${node.width +texteProps.fontSize/7}px;
 								';
 					//var style='';
 					//// _node.insertChild(Xml.createCData(cast (node,exp.ExportText).text.text),0);
@@ -91,7 +99,9 @@ class HTMLExporter extends BasicExporter
 					 	//cast (node,exp.ExportText).text.text),0);
 						//var subXml=Xml.parse("<p/>");
 					//_node.insertChild(subXml,0);
-					_node=subXml;
+					//subXml.firstChild().set("popo","one");
+					_node=subXml.firstChild();
+					_trace( "text done"+subXml.toString());
 				case Image:
 					_node.set("class","image");
 					var img=Xml.createElement("img");
@@ -99,18 +109,29 @@ class HTMLExporter extends BasicExporter
 					_node.insertChild(img,0);
 				case Container:
 					_node.set("class","container");
+				case Slice:
+					_node.set("class","slice");
+					var img=Xml.createElement("img");
+					img.set("src",node.src);
+					_node.insertChild(img,0);
 				case _:
 				_trace("badtype");
 					
 			}
-			if(position=="absolute")
-			_node.set("style",
-				'position:$position;
+			_trace("check position");
+			if(position=="absolute"){
+				var style=(_node.get("style")!=null)? _node.get("style") : "";
+				var genericStyle=' position:$position;
 				left:${castednode.relx}px;
 				top:${castednode.rely}px;
 				width:${castednode.width}px;
-				height:${castednode.height}px;'
-				);
+				height:${castednode.height}px; ';
+			_node.set("style",genericStyle+style);
+				
+			}
+			
+
+			_trace("piko");
 			xml.insertChild(_node,0);
 			if (treeNode.hasChildren()){
 				toHtml(treeNode, _node); //recursion
@@ -137,7 +158,6 @@ class HTMLExporter extends BasicExporter
 
 #if !display
 @template('
-<!doctype html><html lang="en"><head><meta charset="UTF-8" /><title>@title</title></head><body>
 <!doctype html><html lang="en"><head><meta charset="UTF-8" /><title>@title</title>
 <style>
 img{display:block;}
