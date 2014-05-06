@@ -138,6 +138,11 @@ class HTMLExporter extends BasicExporter
 #if !display
 @template('
 <!doctype html><html lang="en"><head><meta charset="UTF-8" /><title>@title</title></head><body>
+<!doctype html><html lang="en"><head><meta charset="UTF-8" /><title>@title</title>
+<style>
+img{display:block;}
+</style>
+</head><body>
 @content
 </body></html>
 
