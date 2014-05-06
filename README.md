@@ -33,7 +33,7 @@ polygonal-ds (Tree)
 - define more Behaviours ... adjust them.
 - scaling ( retina etc...) //done
 - masks
-- border boundings //done
+- shadow boundings //done
 - centered elements
 - rotation
 - make generic export Options ( global scale etc ...) //done 
@@ -41,6 +41,8 @@ polygonal-ds (Tree)
 - launch Settings in textEdit shortcut 
 - investigate move copy instead of toggling others visibility ( should be faster ) but require move element outside of artboard
 - investigate change layer color
+- export layoutGrid as image ( for tests )
+
 #feature request 
 - ask for symbols a la flash ( can resize without sync)
 - ask for Layers properties ( color, data, addFields )
@@ -49,9 +51,11 @@ polygonal-ds (Tree)
 - check trim container if no export 
 
 #bug:
+- symbols embed others
+- should escape text ( """ > bug)
 - invisible layers are made visible even if !exportable
 - symbols temp copy scale at export ( should break copy)
-
+- centeredBorder shapes are not correctly exported ( extra pixels) even with slices ;
 ## html:
 	- generate CSS
 
