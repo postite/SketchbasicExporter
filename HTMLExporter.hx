@@ -18,6 +18,21 @@ class HTMLExporter extends BasicExporter
 		var xml:Xml=Xml.createElement("div");
 		html=toHtml(tree,xml);
 		exportHtml();
+		launch();
+	}
+
+	override function setup():Void
+	{
+		_trace( "setup");
+		var conf= new Config();
+		Config.defaults.imagesPath=doc.dir()+"/html/images/";
+
+		conf.check();
+		config=exp.ExportFactory.config=conf.data;
+		_trace(config);
+		if (config.cleanUp==true)
+		cleanup();
+	}
 	}
 
 	public function toHtml(tree:TreeNode<Exportable>,xml:Xml):Xml
