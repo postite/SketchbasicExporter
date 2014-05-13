@@ -27,12 +27,13 @@ polygonal-ds (Tree)
 
 
 #TODO:
+
 - clean stuff
 - use sketchApi as haxelib
 - use it on a real use case 
 - define more Behaviours ... adjust them.
 - scaling ( retina etc...) //done
-- masks
+- masks (wip)
 - shadow boundings //done
 - centered elements
 - rotation
