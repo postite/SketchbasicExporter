@@ -32,7 +32,7 @@ typedef TexteType={
 	fontSize:Int,
 	?fontPostscriptName:String,
 	textColor:String,
-	alpha:String,
+	alpha:Float,
 	textAlignment:Int,
 	characterSpacing:Int,
 	lineSpacing:Int
@@ -52,7 +52,7 @@ typedef LayerType={
 // extends BasicExporer ?
 class FramerExporter extends BasicExporter{
 
-	var id:Int;
+	var id:Int=0;
 	var sketch:Sketch;
 	 /* Configuration */
  static var framerjs_url = "http://rawgit.com/koenbok/Framer/master/build/framer.js";
@@ -72,7 +72,10 @@ static var  framer_folder = target_folder + "/framer";
 	public function new()
 	{
 		super();
-
+		init();
+		
+	}
+	function init(){
 		try
 		getdependencies()
 		catch(err:Dynamic)log(err);
