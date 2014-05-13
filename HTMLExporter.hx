@@ -109,6 +109,12 @@ class HTMLExporter extends BasicExporter
 					_node.insertChild(img,0);
 				case Container:
 					_node.set("class","container");
+				case Mask:
+					_node.set("class","mask");
+					var img=Xml.createElement("img");
+					img.set("src",node.src);
+					_node.insertChild(img,0);
+					_node.set("style",'clip: rect(${node.masque.y}px, ${node.masque.width}px, ${node.masque.height}px, ${node.masque.x}px);');
 				case Slice:
 					_node.set("class","slice");
 					var img=Xml.createElement("img");
