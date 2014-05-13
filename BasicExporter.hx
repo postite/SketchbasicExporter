@@ -285,6 +285,8 @@ class BasicExporter
 					_node.set("class","container");
 				case Slice:
 					_node.set("class","slice");
+				case Mask:
+					_node.set("class","mask");
 					
 			}
 			
