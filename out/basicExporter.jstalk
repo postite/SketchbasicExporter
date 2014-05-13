@@ -256,21 +256,28 @@ HTMLExporter.prototype = $extend(BasicExporter.prototype,{
 			case 5:
 				_node.set("class","container");
 				break;
-			case 6:
-				_node.set("class","slice");
+			case 7:
+				_node.set("class","mask");
 				var img2 = Xml.createElement("img");
 				img2.set("src",node.src);
 				_node.insertChild(img2,0);
+				_node.set("style","clip: rect(" + Std.string(node.masque.y) + "px, " + Std.string(node.masque.width) + "px, " + Std.string(node.masque.height) + "px, " + Std.string(node.masque.x) + "px);");
+				break;
+			case 6:
+				_node.set("class","slice");
+				var img3 = Xml.createElement("img");
+				img3.set("src",node.src);
+				_node.insertChild(img3,0);
 				break;
 			}
-			Global._trace("check position",{ fileName : "HTMLExporter.hx", lineNumber : 121, className : "HTMLExporter", methodName : "toHtml"});
+			Global._trace("check position",{ fileName : "HTMLExporter.hx", lineNumber : 127, className : "HTMLExporter", methodName : "toHtml"});
 			if(position == "absolute") {
 				var style1;
 				if(_node.get("style") != null) style1 = _node.get("style"); else style1 = "";
 				var genericStyle = " position:" + position + ";\n\t\t\t\tleft:" + castednode.relx + "px;\n\t\t\t\ttop:" + castednode.rely + "px;\n\t\t\t\twidth:" + castednode.width + "px;\n\t\t\t\theight:" + castednode.height + "px; ";
 				_node.set("style",genericStyle + style1);
 			}
-			Global._trace("piko",{ fileName : "HTMLExporter.hx", lineNumber : 134, className : "HTMLExporter", methodName : "toHtml"});
+			Global._trace("piko",{ fileName : "HTMLExporter.hx", lineNumber : 140, className : "HTMLExporter", methodName : "toHtml"});
 			xml.insertChild(_node,0);
 			if(treeNode.children != null) this.toHtml(treeNode,_node);
 		}
@@ -911,6 +918,7 @@ exp.Exportable.prototype = {
 	__class__: exp.Exportable
 };
 exp.ExportLayer = function(layer) {
+	this.masque = null;
 	this.format = "png";
 	this.visible = true;
 	this.name = "no name";
@@ -942,24 +950,28 @@ exp.ExportLayer.prototype = {
 		return this.height = Math.round(f * 100) / 100;
 	}
 	,'export': function() {
-		Global._trace("export",{ fileName : "ExportLayer.hx", lineNumber : 46, className : "exp.ExportLayer", methodName : "export"});
+		Global._trace("export",{ fileName : "ExportLayer.hx", lineNumber : 48, className : "exp.ExportLayer", methodName : "export"});
 		if(this.orig != null && (this.behaviour & 1 << exp.Behave.Exportable[1]) != 0) {
 			if((this.behaviour & 1 << exp.Behave.Visible[1]) != 0) this.visible = true; else this.visible = false;
 			try {
 				if((this.behaviour & 1 << exp.Behave.Svg[1]) != 0) {
-					Global._trace("--------------svg style--------",{ fileName : "ExportLayer.hx", lineNumber : 55, className : "exp.ExportLayer", methodName : "export"});
+					Global._trace("--------------svg style--------",{ fileName : "ExportLayer.hx", lineNumber : 57, className : "exp.ExportLayer", methodName : "export"});
 					this.exportData = helpers.Layer.exportSvg(this.orig,helpers.Document.dir(Global.doc) + "view/images",this.config);
 					this.type = exp.ExportTypes.Svg;
 					this.format = "svg";
 					this.src = this.relativeSrc(this.exportData.path);
 					return this;
 				}
-				if((this.behaviour & 1 << exp.Behave.Scale[1]) != 0) Global._trace("-------------------scale" + this.extractScaleFactor(this.name),{ fileName : "ExportLayer.hx", lineNumber : 63, className : "exp.ExportLayer", methodName : "export"});
-				if((this.behaviour & 1 << exp.Behave.Mask[1]) != 0) Global._trace("-------------------------has mask",{ fileName : "ExportLayer.hx", lineNumber : 65, className : "exp.ExportLayer", methodName : "export"});
+				if((this.behaviour & 1 << exp.Behave.Scale[1]) != 0) Global._trace("-------------------scale" + this.extractScaleFactor(this.name),{ fileName : "ExportLayer.hx", lineNumber : 65, className : "exp.ExportLayer", methodName : "export"});
+				if((this.behaviour & 1 << exp.Behave.Mask[1]) != 0) {
+					this.type = exp.ExportTypes.Mask;
+					this.exportData = helpers.Layer["export"](this.orig,helpers.Document.dir(Global.doc) + "view/images",1,this.config);
+					Global._trace("-------------------------has mask",{ fileName : "ExportLayer.hx", lineNumber : 69, className : "exp.ExportLayer", methodName : "export"});
+				}
 				if(!((this.behaviour & 1 << exp.Behave.Flat[1]) != 0)) {
 					if((this.behaviour & 1 << exp.Behave.Skip[1]) != 0) this.exportData = helpers.Layer["export"](this.orig,helpers.Document.dir(Global.doc) + "view/imuges",1,this.config); else this.exportData = helpers.Layer["export"](this.orig,helpers.Document.dir(Global.doc) + "view/images",1,this.config);
-				} else {
-					Global._trace("-------------------------has flat",{ fileName : "ExportLayer.hx", lineNumber : 74, className : "exp.ExportLayer", methodName : "export"});
+				} else if(!((this.behaviour & 1 << exp.Behave.Mask[1]) != 0)) {
+					Global._trace("-------------------------has flat",{ fileName : "ExportLayer.hx", lineNumber : 79, className : "exp.ExportLayer", methodName : "export"});
 					this.exportData = helpers.Layer["export"](this.orig,helpers.Document.dir(Global.doc) + "view/images",1,this.config);
 					this.type = exp.ExportTypes.Image;
 				}
@@ -973,12 +985,15 @@ exp.ExportLayer.prototype = {
 			this.set_height(this.exportData.sliced.bounds.height);
 			this.set_relx(this.exportData.sliced.bounds.relx);
 			this.set_rely(this.exportData.sliced.bounds.rely);
+			this.afterExport();
 			return this;
 		}
 		return null;
 	}
+	,afterExport: function() {
+	}
 	,relativeSrc: function(absolutePath) {
-		var relative = StringTools.replace(absolutePath,helpers.Document.dir(Global.doc) + "view/","");
+		var relative = StringTools.replace(absolutePath,helpers.Document.filePath(Global.doc),"");
 		return relative;
 	}
 	,extractScaleFactor: function(name) {
@@ -1084,7 +1099,14 @@ exp.ExportFactory.create = function(origLayer) {
 			$export.behaviour = flags;
 			return $export;
 		}
-		Global._trace(klass,{ fileName : "ExportFactory.hx", lineNumber : 77, className : "exp.ExportFactory", methodName : "create"});
+		if((flags & 1 << exp.Behave.Mask[1]) != 0) {
+			Global._trace("behave mask",{ fileName : "ExportFactory.hx", lineNumber : 76, className : "exp.ExportFactory", methodName : "create"});
+			$export = new exp.ExportMask(origLayer);
+			flags |= 1 << exp.Behave.Flat[1];
+			$export.behaviour = flags;
+			return $export;
+		}
+		Global._trace(klass,{ fileName : "ExportFactory.hx", lineNumber : 84, className : "exp.ExportFactory", methodName : "create"});
 		if(klass == MSPage) {
 			$export = new exp.ExportPage(origLayer);
 			$export.behaviour = flags;
@@ -1107,11 +1129,11 @@ exp.ExportFactory.create = function(origLayer) {
 		}
 		if(klass == MSLayerGroup && !((flags & 1 << exp.Behave.Flat[1]) != 0)) {
 			$export = new exp.ExportContainer(origLayer);
-			Global.onelog("ExportContainer",{ fileName : "ExportFactory.hx", lineNumber : 104, className : "exp.ExportFactory", methodName : "create"});
+			Global.onelog("ExportContainer",{ fileName : "ExportFactory.hx", lineNumber : 111, className : "exp.ExportFactory", methodName : "create"});
 			$export.behaviour = flags;
 			return $export;
 		}
-		Global._trace("hact as regular layer",{ fileName : "ExportFactory.hx", lineNumber : 109, className : "exp.ExportFactory", methodName : "create"});
+		Global._trace("hact as regular layer",{ fileName : "ExportFactory.hx", lineNumber : 116, className : "exp.ExportFactory", methodName : "create"});
 		$export = new exp.ExportImage(origLayer);
 		$export.behaviour = flags;
 		return $export;
@@ -1125,7 +1147,7 @@ exp.ExportFactory.behaviour = function(orig) {
 };
 exp.ExportFactory.extract = function(name) {
 	var flags = 0;
-	Global._trace("extract=" + name,{ fileName : "ExportFactory.hx", lineNumber : 131, className : "exp.ExportFactory", methodName : "extract"});
+	Global._trace("extract=" + name,{ fileName : "ExportFactory.hx", lineNumber : 138, className : "exp.ExportFactory", methodName : "extract"});
 	var _g = exp.ExportFactory.beginWith(name);
 	switch(_g) {
 	case "*":
@@ -1144,13 +1166,16 @@ exp.ExportFactory.extract = function(name) {
 		flags |= 1 << exp.Behave.Skip[1];
 		flags |= 1 << exp.Behave.Exportable[1];
 		break;
+	case "#":
+		flags |= 1 << exp.Behave.Mask[1];
+		flags |= 1 << exp.Behave.Exportable[1];
+		break;
 	case "-":
 		flags &= 268435455 - (1 << exp.Behave.Exportable[1]);
 		break;
 	default:
 		flags |= 1 << exp.Behave.Exportable[1];
 	}
-	if(helpers.StringSketch.startsWith(name,"m")) flags |= 1 << exp.Behave.Mask[1];
 	if(helpers.StringSketch.endsWith(name,"*2")) flags |= 1 << exp.Behave.Scale[1];
 	return flags;
 };
@@ -1167,6 +1192,83 @@ exp.ExportImage.__interfaces__ = [exp.Exportable];
 exp.ExportImage.__super__ = exp.ExportLayer;
 exp.ExportImage.prototype = $extend(exp.ExportLayer.prototype,{
 	__class__: exp.ExportImage
+});
+exp.ExportMask = function(layer) {
+	exp.ExportLayer.call(this,layer);
+	this.type = exp.ExportTypes.Mask;
+};
+$hxClasses["exp.ExportMask"] = exp.ExportMask;
+exp.ExportMask.__name__ = true;
+exp.ExportMask.__interfaces__ = [exp.Exportable];
+exp.ExportMask.__super__ = exp.ExportLayer;
+exp.ExportMask.prototype = $extend(exp.ExportLayer.prototype,{
+	'export': function() {
+		Global._trace(this.orig.name(),{ fileName : "ExportMask.hx", lineNumber : 25, className : "exp.ExportMask", methodName : "export"});
+		var group;
+		if(helpers.Layer._class(this.orig) == MSLayerGroup) group = this.orig; else group = null;
+		if(helpers.Layer.isGroup(this.orig)) {
+			Global._trace("layerhasmask=" + Std.string(MSLayerGroup.layerHasMask(group)),{ fileName : "ExportMask.hx", lineNumber : 29, className : "exp.ExportMask", methodName : "export"});
+			Global._trace("hasLayerWithMaskMode=" + group.hasLayerWithMaskMode(),{ fileName : "ExportMask.hx", lineNumber : 30, className : "exp.ExportMask", methodName : "export"});
+			Global._trace("isPartOfClippingMask=" + Std.string(group.isPartOfClippingMask()),{ fileName : "ExportMask.hx", lineNumber : 31, className : "exp.ExportMask", methodName : "export"});
+			Global._trace("hasLayerWithMaskMode=" + group.hasLayerWithMaskMode(),{ fileName : "ExportMask.hx", lineNumber : 32, className : "exp.ExportMask", methodName : "export"});
+			if(group.hasLayerWithMaskMode() == 2) {
+				this.clipped = new List();
+				this.behaviour |= 1 << exp.Behave.Flat[1];
+				var $it0 = (function($this) {
+					var $r;
+					var _this = group.layers();
+					$r = new NativeArrayIterator(_this);
+					return $r;
+				}(this));
+				while( $it0.hasNext() ) {
+					var ch = $it0.next();
+					if(ch.hasClippingMask()) {
+						this.clip = ch;
+						ch.setHasClippingMask(false);
+						ch.setIsVisible(false);
+						Global._trace("zorb",{ fileName : "ExportMask.hx", lineNumber : 42, className : "exp.ExportMask", methodName : "export"});
+						Global._trace("hasLayerWithMaskMode=" + ch.hasLayerWithMaskMode(),{ fileName : "ExportMask.hx", lineNumber : 43, className : "exp.ExportMask", methodName : "export"});
+						try {
+							Global._trace("layerhasmask=" + Std.string(MSLayerGroup.layerHasMask(ch)),{ fileName : "ExportMask.hx", lineNumber : 45, className : "exp.ExportMask", methodName : "export"});
+							Global._trace("hasLayerWithMaskMode=" + ch.hasLayerWithMaskMode(),{ fileName : "ExportMask.hx", lineNumber : 46, className : "exp.ExportMask", methodName : "export"});
+							Global._trace("isPartOfClippingMask=" + ch.isPartOfClippingMask(),{ fileName : "ExportMask.hx", lineNumber : 47, className : "exp.ExportMask", methodName : "export"});
+							Global._trace("hasLayerWithMaskMode=" + ch.hasLayerWithMaskMode(),{ fileName : "ExportMask.hx", lineNumber : 48, className : "exp.ExportMask", methodName : "export"});
+							Global._trace(ch.isMasked(),{ fileName : "ExportMask.hx", lineNumber : 50, className : "exp.ExportMask", methodName : "export"});
+						} catch( msg ) {
+							Global._trace(msg,{ fileName : "ExportMask.hx", lineNumber : 52, className : "exp.ExportMask", methodName : "export"});
+						}
+					} else {
+						this.clipped.add(ch);
+						if(ch.isPartOfClippingMask()) Global._trace(ch.name() + "is isPartOfClippingMask",{ fileName : "ExportMask.hx", lineNumber : 56, className : "exp.ExportMask", methodName : "export"});
+					}
+				}
+			}
+		}
+		if(this.clip != null) {
+			var clippedBounds = this.calculateClipped();
+			this.masque = { x : this.clip.frame().x(), y : this.clip.frame().x(), width : this.clip.frame().width(), height : this.clip.frame().height()};
+		}
+		return exp.ExportLayer.prototype["export"].call(this);
+	}
+	,calculateClipped: function() {
+		var bounds = null;
+		var $it0 = this.clipped.iterator();
+		while( $it0.hasNext() ) {
+			var masked = $it0.next();
+			bounds = masked.absoluteRect();
+		}
+		Global._trace("bound",{ fileName : "ExportMask.hx", lineNumber : 80, className : "exp.ExportMask", methodName : "calculateClipped"});
+		log(bounds);
+		return bounds;
+	}
+	,afterExport: function() {
+		Global._trace("afterExport",{ fileName : "ExportMask.hx", lineNumber : 85, className : "exp.ExportMask", methodName : "afterExport"});
+		if(this.clip != null) {
+			this.clip.setHasClippingMask(true);
+			this.clip.setIsVisible(true);
+		}
+	}
+	,__class__: exp.ExportMask
 });
 exp.ExportPage = function(layer) {
 	exp.ExportContainer.call(this,layer);
@@ -1334,7 +1436,7 @@ exp.ExportText.prototype = $extend(exp.ExportLayer.prototype,{
 	}
 	,__class__: exp.ExportText
 });
-exp.ExportTypes = { __ename__ : true, __constructs__ : ["Page","ArtBoard","Text","Image","Svg","Container","Slice"] };
+exp.ExportTypes = { __ename__ : true, __constructs__ : ["Page","ArtBoard","Text","Image","Svg","Container","Slice","Mask"] };
 exp.ExportTypes.Page = ["Page",0];
 exp.ExportTypes.Page.toString = $estr;
 exp.ExportTypes.Page.__enum__ = exp.ExportTypes;
@@ -1356,6 +1458,9 @@ exp.ExportTypes.Container.__enum__ = exp.ExportTypes;
 exp.ExportTypes.Slice = ["Slice",6];
 exp.ExportTypes.Slice.toString = $estr;
 exp.ExportTypes.Slice.__enum__ = exp.ExportTypes;
+exp.ExportTypes.Mask = ["Mask",7];
+exp.ExportTypes.Mask.toString = $estr;
+exp.ExportTypes.Mask.__enum__ = exp.ExportTypes;
 var haxe = {};
 haxe.ds = {};
 haxe.ds.IntMap = function() {
@@ -1754,6 +1859,9 @@ helpers.Document.__name__ = true;
 helpers.Document.dir = function(d) {
 	return bs.BomberCommands.getFileFolder();
 };
+helpers.Document.filePath = function(d) {
+	return d.fileURL().path();
+};
 helpers.Document.createText = function(d,content,_path) {
 	
  		var someContent = NSString.stringWithString_(content)
@@ -1793,9 +1901,9 @@ helpers.Layer["export"] = function(layer,path,factor,config) {
 		invisible = true;
 		layer.setIsVisible(true);
 	}
-	Global._trace("°°°°°°°°°°°°°°°path=" + path,{ fileName : "Layer.hx", lineNumber : 86, className : "helpers.Layer", methodName : "export"});
-	path = config.imagesPath + "/" + page.name() + "/" + artboard.name() + "/" + helpers.StringSketch.clean(layer.name()) + "." + config.format;
+	path = config.imagesPath + page.name() + "/" + artboard.name() + "/" + helpers.StringSketch.clean(layer.name()) + "." + config.format;
 	factor = config.scale;
+	Global._trace("°°°°°°°°°°°°°°°path=" + path,{ fileName : "Layer.hx", lineNumber : 89, className : "helpers.Layer", methodName : "export"});
 	var sliced = helpers.Layer.withFactor(layer,factor);
 	Global.doc.saveArtboardOrSlice_toFile(sliced.slice,path);
 	if(invisible) layer.setIsVisible(false);
@@ -1847,6 +1955,7 @@ helpers.Layer.withFactor = function(layer,factor) {
 	} catch( msg ) {
 		log(msg);
 	}
+	Global._trace("exported",{ fileName : "Layer.hx", lineNumber : 162, className : "helpers.Layer", methodName : "withFactor"});
 	return { slice : slice, bounds : bounds};
 };
 helpers.Format = { __ename__ : true, __constructs__ : ["Png","Svg","Jpg","Pdf","Tiff","Eps"] };
@@ -1913,9 +2022,13 @@ helpers.StringSketch.cleanPath = function(str) {
 	return r.replace(str,"");
 };
 helpers.StringSketch.clean = function(str) {
-	var r = new EReg("\\s+","g");
+	var spaces = new EReg("\\s+","g");
 	var trimed = StringTools.trim(str);
-	return r.replace(trimed," ");
+	str = spaces.replace(trimed,"");
+	var begin = new EReg("^[°_#-]{1,}","g");
+	str = begin.replace(str,"");
+	Global._trace("clean =" + str,{ fileName : "StringSketch.hx", lineNumber : 34, className : "helpers.StringSketch", methodName : "clean"});
+	return str;
 };
 helpers.StringSketch.endsWith = function(str,ends) {
 	if(ends == "") return true;
@@ -1923,14 +2036,6 @@ helpers.StringSketch.endsWith = function(str,ends) {
 	if(str == null) str = "null"; else str = "" + str;
 	if(ends == null) ends = "null"; else ends = "" + ends;
 	return str.length >= ends.length && HxOverrides.substr(str,str.length - ends.length,null) == ends;
-};
-helpers.StringSketch.startsWith = function(str,starts) {
-	var str1;
-	if(str == null) str1 = "null"; else str1 = "" + str;
-	if(starts == "") return true;
-	if(str1 == null || starts == null) return false;
-	var $is = str1.length >= starts.length && HxOverrides.substr(str1,0,starts.length) == starts;
-	return $is;
 };
 helpers.StringSketch.getTextTag = function(text) {
 	var textname;
