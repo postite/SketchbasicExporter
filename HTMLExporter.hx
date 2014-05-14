@@ -45,6 +45,11 @@ class HTMLExporter extends BasicExporter
 			open_task.launch();
 	}
 
+	override function cleanup(){
+		try ns.NSFileManager.defaultManager().removeItemAtPath(config.imagesPath+activePage.name()+"/"+activeArtboard.name()+"/")
+			catch(msg:Dynamic)_trace("failde to clean view"+ msg);
+	}
+
 	public function toHtml(tree:TreeNode<Exportable>,xml:Xml):Xml
 	{
 

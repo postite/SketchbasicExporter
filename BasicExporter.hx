@@ -110,7 +110,7 @@ class BasicExporter
 		var conf= new Config();
 		conf.check();
 		config=exp.ExportFactory.config=conf.data;
-
+		
 		if (config.cleanUp==true)
 		cleanup();
 
@@ -151,8 +151,10 @@ class BasicExporter
 	}
 	function cleanupArtboardDir(art:MSArtboardGroup):Void
 	{
-		try ns.NSFileManager.defaultManager().removeItemAtPath(doc.dir()+"view/images/"+art.parentPage().name()+"/"+art.name()+"/" )
-			catch(msg:Dynamic)_trace("failde to clean view"+ msg);
+		var path=config.imagesPath+art.parentPage().name()+"/"+art.name()+"/";
+		_trace("remove artboard "+ path);
+		try ns.NSFileManager.defaultManager().removeItemAtPath(path)
+			catch(msg:Dynamic)_trace("failde to clean artBoardDir"+ msg);
 	}
 	
 
