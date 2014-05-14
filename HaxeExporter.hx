@@ -20,6 +20,7 @@ class HaxeExporter extends FramerExporter{
 		_trace( framer);
 		var json=haxe.Json.stringify(framer);
 		writeToFile(json);
+		_trace(" done");
 	}
 
 
@@ -72,7 +73,7 @@ class HaxeExporter extends FramerExporter{
 						
 						
 						
-						image.path=_node.src;
+						image.path=_node.rootSrc;
 						layer.imageType=_node.format;
 						layer.image=image;
 				case Svg:
@@ -84,7 +85,7 @@ class HaxeExporter extends FramerExporter{
 							frame.height=_node.height;
 						image.frame=frame;
 
-						image.path=_node.src;
+						image.path=_node.rootSrc;
 						layer.imageType=_node.format;
 						layer.image=image;
 				case Text:
