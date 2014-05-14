@@ -182,14 +182,18 @@ class BasicExporter
 
 	}
 	function processArtboard(art:MSArtboardGroup){
+		_trace( "processArtboard");
 		activeArtboard=art;
 		var exportable=exp.ExportFactory.create(art);
 			if(exportable!=null){
-			cleanupArtboardDir(cast selection.firstObject());
+				try
+			cleanupArtboardDir(cast selection.firstObject())
+				catch(msg:Dynamic)_trace("cleanupFailed");
 			builder.appendChild(exportable.export());
 			//_trace("befor bigloop name="+indent+art.name());
 			bigloop(art.layers());
 			}
+		_trace( "bigloop");
 	}
 
 	function bigloop(layers:SketchArray<MSLayer>,?indent:String)
