@@ -89,16 +89,22 @@ BasicExporter.prototype = {
 		Global._trace("end Artboard loop",{ fileName : "BasicExporter.hx", lineNumber : 181, className : "BasicExporter", methodName : "ArtboardsLoop"});
 	}
 	,processArtboard: function(art) {
+		Global._trace("processArtboard",{ fileName : "BasicExporter.hx", lineNumber : 185, className : "BasicExporter", methodName : "processArtboard"});
 		this.activeArtboard = art;
 		var exportable = exp.ExportFactory.create(art);
 		if(exportable != null) {
-			this.cleanupArtboardDir(Global.selection.firstObject());
+			try {
+				this.cleanupArtboardDir(Global.selection.firstObject());
+			} catch( msg ) {
+				Global._trace("cleanupFailed",{ fileName : "BasicExporter.hx", lineNumber : 191, className : "BasicExporter", methodName : "processArtboard"});
+			}
 			this.builder.appendChild(exportable["export"]());
 			this.bigloop(art.layers());
 		}
+		Global._trace("bigloop",{ fileName : "BasicExporter.hx", lineNumber : 196, className : "BasicExporter", methodName : "processArtboard"});
 	}
 	,bigloop: function(layers,indent) {
-		Global._trace(" bigloop",{ fileName : "BasicExporter.hx", lineNumber : 197, className : "BasicExporter", methodName : "bigloop"});
+		Global._trace(" bigloop",{ fileName : "BasicExporter.hx", lineNumber : 201, className : "BasicExporter", methodName : "bigloop"});
 		this.builder.down();
 		if(indent == null) indent = "-"; else indent = indent + "-";
 		var $native = new NativeArrayIterator(layers).haxeArray();
@@ -110,21 +116,21 @@ BasicExporter.prototype = {
 			var exported = null;
 			var factory = exp.ExportFactory.create(layer);
 			if(factory != null) exported = factory["export"]();
-			Global._trace("------------layer---------------" + layer.name(),{ fileName : "BasicExporter.hx", lineNumber : 207, className : "BasicExporter", methodName : "bigloop"});
+			Global._trace("------------layer---------------" + layer.name(),{ fileName : "BasicExporter.hx", lineNumber : 211, className : "BasicExporter", methodName : "bigloop"});
 			if(exported != null) {
-				Global._trace("--------------type-------------" + Std.string(exported.type),{ fileName : "BasicExporter.hx", lineNumber : 209, className : "BasicExporter", methodName : "bigloop"});
+				Global._trace("--------------type-------------" + Std.string(exported.type),{ fileName : "BasicExporter.hx", lineNumber : 213, className : "BasicExporter", methodName : "bigloop"});
 				this.builder.appendChild(exported);
-				Global._trace("name=" + indent + layer.name(),{ fileName : "BasicExporter.hx", lineNumber : 211, className : "BasicExporter", methodName : "bigloop"});
-				Global._trace("flat?" + Std.string((exported.behaviour & 1 << exp.Behave.Flat[1]) != 0),{ fileName : "BasicExporter.hx", lineNumber : 212, className : "BasicExporter", methodName : "bigloop"});
-				Global._trace("Sliced?" + Std.string((exported.behaviour & 1 << exp.Behave.Sliced[1]) != 0),{ fileName : "BasicExporter.hx", lineNumber : 213, className : "BasicExporter", methodName : "bigloop"});
+				Global._trace("name=" + indent + layer.name(),{ fileName : "BasicExporter.hx", lineNumber : 215, className : "BasicExporter", methodName : "bigloop"});
+				Global._trace("flat?" + Std.string((exported.behaviour & 1 << exp.Behave.Flat[1]) != 0),{ fileName : "BasicExporter.hx", lineNumber : 216, className : "BasicExporter", methodName : "bigloop"});
+				Global._trace("Sliced?" + Std.string((exported.behaviour & 1 << exp.Behave.Sliced[1]) != 0),{ fileName : "BasicExporter.hx", lineNumber : 217, className : "BasicExporter", methodName : "bigloop"});
 				if(helpers.Layer.isGroup(layer) && !((exported.behaviour & 1 << exp.Behave.Flat[1]) != 0)) {
-					Global._trace("isgroup and not Slice nor Flat",{ fileName : "BasicExporter.hx", lineNumber : 216, className : "BasicExporter", methodName : "bigloop"});
+					Global._trace("isgroup and not Slice nor Flat",{ fileName : "BasicExporter.hx", lineNumber : 220, className : "BasicExporter", methodName : "bigloop"});
 					this.bigloop(layer.layers(),indent);
 				}
 			}
 		}
 		this.builder.up();
-		Global._trace("end bigloop",{ fileName : "BasicExporter.hx", lineNumber : 224, className : "BasicExporter", methodName : "bigloop"});
+		Global._trace("end bigloop",{ fileName : "BasicExporter.hx", lineNumber : 228, className : "BasicExporter", methodName : "bigloop"});
 	}
 	,__class__: BasicExporter
 };
@@ -149,6 +155,35 @@ EReg.prototype = {
 	}
 	,__class__: EReg
 };
+var StringTools = function() { };
+$hxClasses["StringTools"] = StringTools;
+StringTools.__name__ = true;
+StringTools.htmlEscape = function(s,quotes) {
+	s = s.split("&").join("&amp;").split("<").join("&lt;").split(">").join("&gt;");
+	if(quotes) return s.split('"').join("&quot;").split("'").join("&#039;"); else return s;
+};
+StringTools.isSpace = function(s,pos) {
+	var c = HxOverrides.cca(s,pos);
+	return c > 8 && c < 14 || c == 32;
+};
+StringTools.ltrim = function(s) {
+	var l = s.length;
+	var r = 0;
+	while(r < l && StringTools.isSpace(s,r)) r++;
+	if(r > 0) return HxOverrides.substr(s,r,l - r); else return s;
+};
+StringTools.rtrim = function(s) {
+	var l = s.length;
+	var r = 0;
+	while(r < l && StringTools.isSpace(s,l - r - 1)) r++;
+	if(r > 0) return HxOverrides.substr(s,0,l - r); else return s;
+};
+StringTools.trim = function(s) {
+	return StringTools.ltrim(StringTools.rtrim(s));
+};
+StringTools.replace = function(s,sub,by) {
+	return s.split(sub).join(by);
+};
 var Global = function() { };
 $hxClasses["Global"] = Global;
 Global.__name__ = true;
@@ -171,138 +206,144 @@ Global.writeToFile = function(content,path,atomically) {
 	var nsContent = NSString.stringWithString(content);
 	return nsContent.writeToFile_atomically(path,atomically);
 };
-var HTMLExporter = function() {
+var FramerExporter = function() {
+	this.id = 0;
 	BasicExporter.call(this);
-	this.generate();
-	var xml = Xml.createElement("div");
-	this.html = this.toHtml(this.tree,xml);
-	this.exportHtml();
-	this.launch();
+	this.init();
 };
-$hxClasses["HTMLExporter"] = HTMLExporter;
-HTMLExporter.__name__ = true;
-HTMLExporter.main = function() {
-	new HTMLExporter();
-};
-HTMLExporter.__super__ = BasicExporter;
-HTMLExporter.prototype = $extend(BasicExporter.prototype,{
-	setup: function() {
-		Global._trace("setup",{ fileName : "HTMLExporter.hx", lineNumber : 26, className : "HTMLExporter", methodName : "setup"});
+$hxClasses["FramerExporter"] = FramerExporter;
+FramerExporter.__name__ = true;
+FramerExporter.__super__ = BasicExporter;
+FramerExporter.prototype = $extend(BasicExporter.prototype,{
+	init: function() {
+		try {
+			this.getdependencies();
+		} catch( err ) {
+			log(err);
+		}
+		this.generate();
+		var framer = this.toFramer(this.tree.children.children);
+		this.exportFramer(JSON.stringify(framer));
+		this.createHtml();
+		Global._trace("donnz",{ fileName : "FramerExporter.hx", lineNumber : 87, className : "FramerExporter", methodName : "init"});
+	}
+	,setup: function() {
+		Global._trace("setup",{ fileName : "FramerExporter.hx", lineNumber : 91, className : "FramerExporter", methodName : "setup"});
 		var conf = new exp.Config();
-		exp.Config.defaults.imagesPath = helpers.Document.dir(Global.doc) + "/html/images/";
+		exp.Config.defaults.imagesPath = helpers.Document.dir(Global.doc) + "/images/";
 		conf.check();
 		this.config = exp.ExportFactory.config = conf.data;
-		Global._trace(this.config,{ fileName : "HTMLExporter.hx", lineNumber : 32, className : "HTMLExporter", methodName : "setup"});
+		Global._trace(this.config,{ fileName : "FramerExporter.hx", lineNumber : 97, className : "FramerExporter", methodName : "setup"});
 		if(this.config.cleanUp == true) this.cleanup();
 	}
-	,launch: function() {
+	,exportFramer: function(content) {
+		if(this.config.allArtBoards != true) {
+			content = "window.FramerPS = window.FramerPS || {};\n\t\twindow.FramerPS[\"" + FramerExporter.document_name + "\"] =" + content;
+			Global.writeToFile(content,FramerExporter.framer_folder + "/views." + FramerExporter.document_name + ".js",null);
+		} else Global.writeToFile(content,helpers.Document.dir(Global.doc) + "/view/framer-" + Global.doc.displayName() + ".json",null);
+	}
+	,getdependencies: function() {
+		var task = NSTask.alloc().init();
+		task.setCurrentDirectoryPath(FramerExporter.framer_folder);
+		task.setLaunchPath("/usr/bin/curl");
+		var argsArray = NSArray.arrayWithObjects("-O",FramerExporter.framerjs_url,null);
+		task.setArguments(argsArray);
+		task.launch();
+		Global.writeToFile(FramerExporter.framerPS,FramerExporter.framer_folder + "/framerps.js",null);
+		Global.writeToFile("var p='popo';",FramerExporter.target_folder + "/app.js",null);
+	}
+	,createHtml: function() {
+		Global._trace("createHtml",{ fileName : "FramerExporter.hx", lineNumber : 151, className : "FramerExporter", methodName : "createHtml"});
+		Global._trace("index.html not exists",{ fileName : "FramerExporter.hx", lineNumber : 155, className : "FramerExporter", methodName : "createHtml"});
+		var index = new HtmlTemplate();
+		index.docname = Global.doc.displayName() + ".js";
+		var out = index.execute();
+		Global._trace("out=" + FramerExporter.target_folder + "/index.html",{ fileName : "FramerExporter.hx", lineNumber : 160, className : "FramerExporter", methodName : "createHtml"});
+		helpers.Document.createText(Global.doc,out,FramerExporter.target_folder + "/index.html");
+		Global._trace("after Html",{ fileName : "FramerExporter.hx", lineNumber : 163, className : "FramerExporter", methodName : "createHtml"});
 		var open_task = NSTask.alloc().init();
-		var open_task_args = NSArray.arrayWithObjects(this.config.imagesPath + this.activePage.name() + "/" + this.activeArtboard.name() + "/" + this.activeArtboard.name() + ".html");
+		var open_task_args = NSArray.arrayWithObjects(FramerExporter.target_folder + "/index.html");
+		open_task.setCurrentDirectoryPath(FramerExporter.framer_folder);
 		open_task.setLaunchPath("/usr/bin/open");
 		open_task.setArguments(open_task_args);
-		Global._trace(open_task.launchPath(),{ fileName : "HTMLExporter.hx", lineNumber : 44, className : "HTMLExporter", methodName : "launch"});
+		Global._trace(open_task.launchPath(),{ fileName : "FramerExporter.hx", lineNumber : 172, className : "FramerExporter", methodName : "createHtml"});
 		open_task.launch();
 	}
-	,cleanup: function() {
-		try {
-			var _this = NSFileManager.defaultManager();
-			var dir = this.config.imagesPath + this.activePage.name() + "/" + this.activeArtboard.name() + "/";
-			var error = null;
-			_this.removeItemAtPath_error(dir,error);
-		} catch( msg ) {
-			Global._trace("failde to clean view" + Std.string(msg),{ fileName : "HTMLExporter.hx", lineNumber : 50, className : "HTMLExporter", methodName : "cleanup"});
-		}
-	}
-	,toHtml: function(tree,xml) {
+	,toFramer: function(tree,obj) {
+		Global._trace("toFramer" + tree.val.name,{ fileName : "FramerExporter.hx", lineNumber : 191, className : "FramerExporter", methodName : "toFramer"});
 		var $it0 = tree.childIterator();
 		while( $it0.hasNext() ) {
 			var node = $it0.next();
-			var castednode;
-			castednode = js.Boot.__cast(node , exp.ExportLayer);
+			Global._trace("inloop" + node.name,{ fileName : "FramerExporter.hx", lineNumber : 193, className : "FramerExporter", methodName : "toFramer"});
 			var treeNode = tree.find(node);
-			var _node = null;
-			Global._trace(node.type,{ fileName : "HTMLExporter.hx", lineNumber : 61, className : "HTMLExporter", methodName : "toHtml"});
+			var layer = { };
+			var _node;
+			_node = js.Boot.__cast(node , exp.ExportLayer);
+			layer.id = ++this.id;
+			layer.name = _node.name;
+			var layerframe = { };
+			layerframe.height = _node.height;
+			layerframe.width = _node.width;
+			layerframe.x = _node.relx;
+			layerframe.y = _node.rely;
+			layerframe.rotation = 0;
+			layer.layerFrame = layerframe;
+			layer.maskFrame = null;
+			layer.imageType = null;
+			layer.image = null;
+			layer.text = null;
+			layer.visible = _node.visible;
+			Global._trace("switch type" + Std.string(node.type),{ fileName : "FramerExporter.hx", lineNumber : 218, className : "FramerExporter", methodName : "toFramer"});
 			var _g = node.type;
 			switch(_g[1]) {
-			case 0:
-				_node = Xml.createElement("section");
-				break;
-			default:
-				_node = Xml.createElement("div");
-			}
-			_node.set("name",node.name);
-			var position = "absolute";
-			var _g1 = node.type;
-			switch(_g1[1]) {
-			case 0:
-				_node.set("class","page");
-				break;
-			case 1:
-				_node.set("class","artboard");
+			case 3:
+				var image = { };
+				var frame = { };
+				frame.x = _node.relx;
+				frame.y = _node.rely;
+				frame.width = _node.width;
+				frame.height = _node.height;
+				image.frame = frame;
+				image.path = _node.src;
+				layer.imageType = _node.format;
+				layer.image = image;
 				break;
 			case 4:
-				_node.set("class","svg");
-				var img = Xml.createElement("img");
-				img.set("src",node.src);
-				_node.insertChild(img,0);
+				var image1 = { };
+				var frame1 = { };
+				frame1.x = _node.relx;
+				frame1.y = _node.rely;
+				frame1.width = _node.width;
+				frame1.height = _node.height;
+				image1.frame = frame1;
+				image1.path = _node.src;
+				layer.imageType = _node.format;
+				layer.image = image1;
 				break;
 			case 2:
-				Global._trace("isText" + node.name,{ fileName : "HTMLExporter.hx", lineNumber : 83, className : "HTMLExporter", methodName : "toHtml"});
-				_node.set("class","text");
-				var tag = helpers.StringSketch.getTextTag(node.name);
-				var texteProps = (js.Boot.__cast(node , exp.ExportText)).text;
-				var lineHeight;
-				if(node.height >= texteProps.lineSpacing * 1.5) lineHeight = texteProps.lineSpacing; else lineHeight = node.height;
-				var style = "font-size:" + texteProps.fontSize + "px;\n\t\t\t\t\t\t\t\tfont-family:" + texteProps.fontPostscriptName + ";\n\t\t\t\t\t\t\t\ttext-align:" + Std.string(texteProps.textAlignment) + ";\n\t\t\t\t\t\t\t\tline-height:" + lineHeight + "px;\n\t\t\t\t\t\t\t\tcolor:#" + texteProps.color + ";\n\t\t\t\t\t\t\t\ttop:" + node.rely + "px;\n\t\t\t\t\t\t\t\tleft:" + node.relx + "px;\n\t\t\t\t\t\t\t\twidth:" + (node.width + texteProps.fontSize / 7) + "px;\n\t\t\t\t\t\t\t\t";
-				var subXml = Xml.parse("<" + tag.tagName + " class=\"" + tag.name + "\" style=\"" + style + "\">" + texteProps.text + "</" + tag.tagName + ">");
-				_node = subXml.firstChild();
-				Global._trace("text done" + subXml.toString(),{ fileName : "HTMLExporter.hx", lineNumber : 109, className : "HTMLExporter", methodName : "toHtml"});
+				layer.text = node.toObject();
 				break;
-			case 3:
-				_node.set("class","image");
-				var img1 = Xml.createElement("img");
-				img1.set("src",node.src);
-				_node.insertChild(img1,0);
-				break;
-			case 5:
-				_node.set("class","container");
-				break;
-			case 7:
-				_node.set("class","mask");
-				var img2 = Xml.createElement("img");
-				img2.set("src",node.src);
-				_node.insertChild(img2,0);
-				_node.set("style","clip: rect(" + Std.string(node.masque.y) + "px, " + Std.string(node.masque.width) + "px, " + Std.string(node.masque.height) + "px, " + Std.string(node.masque.x) + "px);");
-				break;
-			case 6:
-				_node.set("class","slice");
-				var img3 = Xml.createElement("img");
-				img3.set("src",node.src);
-				_node.insertChild(img3,0);
-				break;
+			default:
+				Global._trace("badtype",{ fileName : "FramerExporter.hx", lineNumber : 250, className : "FramerExporter", methodName : "toFramer"});
 			}
-			Global._trace("check position",{ fileName : "HTMLExporter.hx", lineNumber : 132, className : "HTMLExporter", methodName : "toHtml"});
-			if(position == "absolute") {
-				var style1;
-				if(_node.get("style") != null) style1 = _node.get("style"); else style1 = "";
-				var genericStyle = " position:" + position + ";\n\t\t\t\tleft:" + castednode.relx + "px;\n\t\t\t\ttop:" + castednode.rely + "px;\n\t\t\t\twidth:" + castednode.width + "px;\n\t\t\t\theight:" + castednode.height + "px; ";
-				_node.set("style",genericStyle + style1);
+			Global._trace("end Switch for " + Std.string(node.type),{ fileName : "FramerExporter.hx", lineNumber : 253, className : "FramerExporter", methodName : "toFramer"});
+			if(obj == null) {
+				obj = [];
+				obj.push(layer);
+			} else if(_node.type == exp.ExportTypes.ArtBoard) Global._trace("page",{ fileName : "FramerExporter.hx", lineNumber : 259, className : "FramerExporter", methodName : "toFramer"}); else {
+				Global._trace(obj,{ fileName : "FramerExporter.hx", lineNumber : 266, className : "FramerExporter", methodName : "toFramer"});
+				Global._trace("act",{ fileName : "FramerExporter.hx", lineNumber : 267, className : "FramerExporter", methodName : "toFramer"});
+				if(obj.children != null) obj.children.push(layer); else obj.push(layer);
 			}
-			Global._trace("piko",{ fileName : "HTMLExporter.hx", lineNumber : 145, className : "HTMLExporter", methodName : "toHtml"});
-			xml.insertChild(_node,0);
-			if(treeNode.children != null) this.toHtml(treeNode,_node);
+			if(treeNode.children != null) {
+				layer.children = [];
+				this.toFramer(treeNode,layer);
+			}
+			Global._trace("end loop" + layer.name,{ fileName : "FramerExporter.hx", lineNumber : 278, className : "FramerExporter", methodName : "toFramer"});
 		}
-		this.html = xml;
-		return xml;
+		return obj;
 	}
-	,exportHtml: function() {
-		var t = new HtmlView();
-		t.title = Global.doc.displayName();
-		t.content = this.html.toString();
-		var $export = t.execute();
-		Global.writeToFile($export,this.config.imagesPath + this.activePage.name() + "/" + this.activeArtboard.name() + "/" + this.activeArtboard.name() + ".html",null);
-	}
-	,__class__: HTMLExporter
+	,__class__: FramerExporter
 });
 var erazor = {};
 erazor.macro = {};
@@ -316,23 +357,111 @@ erazor.macro.Template.prototype = {
 	}
 	,__class__: erazor.macro.Template
 };
-var HtmlView = function() {
+var HtmlTemplate = function() {
 	erazor.macro.Template.call(this);
 };
-$hxClasses["HtmlView"] = HtmlView;
-HtmlView.__name__ = true;
-HtmlView.__super__ = erazor.macro.Template;
-HtmlView.prototype = $extend(erazor.macro.Template.prototype,{
+$hxClasses["HtmlTemplate"] = HtmlTemplate;
+HtmlTemplate.__name__ = true;
+HtmlTemplate.__super__ = erazor.macro.Template;
+HtmlTemplate.prototype = $extend(erazor.macro.Template.prototype,{
 	execute: function() {
 		var __b__ = new erazor.Output($bind(this,this.escape));
-		__b__.b += "\n<!doctype html><html lang=\"en\"><head><meta charset=\"UTF-8\" /><title>";
-		__b__.unsafeAdd(this.title);
-		__b__.b += "</title>\n<style>\nimg{display:block;}\n</style>\n</head><body>\n";
-		__b__.unsafeAdd(this.content);
-		__b__.b += "\n</body></html>\n\n\t";
+		__b__.b += "\n<!DOCTYPE html>\n<html>\n<head>\n<meta charset=\"utf-8\">\n<meta name=\"apple-mobile-web-app-capable\" content=\"yes\">\n<meta name=\"apple-mobile-web-app-status-bar-style\" content=\"black\">\n<meta name=\"format-detection\" content=\"telephone=no\">\n<meta name=\"viewport\" content=\"width=640,initial-scale=0.5,user-scalable=no\">\n<style type=\"text/css\" media=\"screen\">\n\t* {margin:0;padding:0;border:none;-webkit-user-select:none;}\n\tbody {\n\t\tbackground-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAMAAAC6V+0/AAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAAZQTFRFMzMzDBMatgEYWQAAABhJREFUeNpiYIADRjhgGNKCw8UfcAAQYACltADJ8fw9RwAAAABJRU5ErkJggg==);\n\t\tfont: 28px/1em \"Helvetica\";\n\t\tcolor: #FFF;\n\t\t-webkit-tap-highlight-color: rgba(0,0,0,0);\n\t\t-webkit-perspective: 1000px;\n\t}\n\t::-webkit-scrollbar {\n\t\twidth: 0px;\n\t\theight: 0px;\n\t}\n</style>\n</head>\n<body>\n<script src=\"framer/views.";
+		__b__.unsafeAdd(this.docname);
+		__b__.b += "\"></script>\n\n<script src=\"framer/framer.js\"></script><script src=\"framer/framerps.js\"></script>\n\n\n <script src=\"app.js\"></script>\n </body>\n </html>\n\t";
 		return __b__.b;
 	}
-	,__class__: HtmlView
+	,__class__: HtmlTemplate
+});
+var HaxeExporter = function() {
+	FramerExporter.call(this);
+};
+$hxClasses["HaxeExporter"] = HaxeExporter;
+HaxeExporter.__name__ = true;
+HaxeExporter.main = function() {
+	new HaxeExporter();
+};
+HaxeExporter.__super__ = FramerExporter;
+HaxeExporter.prototype = $extend(FramerExporter.prototype,{
+	init: function() {
+		Global._trace(" helo" + this.config.imagesPath,{ fileName : "HaxeExporter.hx", lineNumber : 15, className : "HaxeExporter", methodName : "init"});
+		this.config.imagesPath = helpers.Document.dir(Global.doc) + this.config.imagesPath;
+		this.generate();
+		var framer = this.toHaxeJson(this.tree);
+		Global._trace(framer,{ fileName : "HaxeExporter.hx", lineNumber : 20, className : "HaxeExporter", methodName : "init"});
+		var json = JSON.stringify(framer);
+		this.writeToFile(json);
+		Global._trace(" done",{ fileName : "HaxeExporter.hx", lineNumber : 23, className : "HaxeExporter", methodName : "init"});
+	}
+	,writeToFile: function(content) {
+		Global._trace("pop",{ fileName : "HaxeExporter.hx", lineNumber : 29, className : "HaxeExporter", methodName : "writeToFile"});
+		Global.writeToFile(content,this.config.imagesPath + "pop.json",null);
+	}
+	,toHaxeJson: function(tree,obj) {
+		Global._trace("toJson",{ fileName : "HaxeExporter.hx", lineNumber : 35, className : "HaxeExporter", methodName : "toHaxeJson"});
+		var $it0 = tree.childIterator();
+		while( $it0.hasNext() ) {
+			var node = $it0.next();
+			var treeNode = tree.find(node);
+			var layer = { };
+			var _node;
+			_node = js.Boot.__cast(node , exp.ExportLayer);
+			layer.id = ++this.id;
+			layer.name = _node.name;
+			var layerframe = { };
+			layerframe.height = _node.height;
+			layerframe.width = _node.width;
+			layerframe.x = _node.relx;
+			layerframe.y = _node.rely;
+			layerframe.rotation = 0;
+			layer.layerFrame = layerframe;
+			layer.maskFrame = null;
+			layer.imageType = null;
+			layer.image = null;
+			layer.text = null;
+			layer.visible = _node.visible;
+			layer.children = [];
+			var _g = node.type;
+			switch(_g[1]) {
+			case 3:
+				var image = { };
+				var frame = { };
+				frame.x = _node.relx;
+				frame.y = _node.rely;
+				frame.width = _node.width;
+				frame.height = _node.height;
+				image.frame = frame;
+				image.path = _node.rootSrc;
+				layer.imageType = _node.format;
+				layer.image = image;
+				break;
+			case 4:
+				var image1 = { };
+				var frame1 = { };
+				frame1.x = _node.relx;
+				frame1.y = _node.rely;
+				frame1.width = _node.width;
+				frame1.height = _node.height;
+				image1.frame = frame1;
+				image1.path = _node.rootSrc;
+				layer.imageType = _node.format;
+				layer.image = image1;
+				break;
+			case 2:
+				layer.text = node.toObject();
+				break;
+			default:
+				Global._trace("badtype" + Std.string(node.type),{ fileName : "HaxeExporter.hx", lineNumber : 95, className : "HaxeExporter", methodName : "toHaxeJson"});
+			}
+			if(obj == null) {
+				obj = [];
+				obj.push(layer);
+			} else if(_node.type == exp.ExportTypes.Page) obj.push(layer); else obj.children.push(layer);
+			if(treeNode.children != null) this.toHaxeJson(treeNode,layer);
+		}
+		return obj;
+	}
+	,__class__: HaxeExporter
 });
 var HxOverrides = function() { };
 $hxClasses["HxOverrides"] = HxOverrides;
@@ -350,24 +479,6 @@ HxOverrides.substr = function(s,pos,len) {
 		if(pos < 0) pos = 0;
 	} else if(len < 0) len = s.length + len - pos;
 	return s.substr(pos,len);
-};
-HxOverrides.indexOf = function(a,obj,i) {
-	var len = a.length;
-	if(i < 0) {
-		i += len;
-		if(i < 0) i = 0;
-	}
-	while(i < len) {
-		if(a[i] === obj) return i;
-		i++;
-	}
-	return -1;
-};
-HxOverrides.remove = function(a,obj) {
-	var i = HxOverrides.indexOf(a,obj,0);
-	if(i == -1) return false;
-	a.splice(i,1);
-	return true;
 };
 HxOverrides.iter = function(a) {
 	return { cur : 0, arr : a, hasNext : function() {
@@ -462,12 +573,6 @@ Std.__name__ = true;
 Std.string = function(s) {
 	return js.Boot.__string_rec(s,"");
 };
-Std.parseInt = function(x) {
-	var v = parseInt(x,10);
-	if(v == 0 && (HxOverrides.cca(x,1) == 120 || HxOverrides.cca(x,1) == 88)) v = parseInt(x);
-	if(isNaN(v)) return null;
-	return v;
-};
 Std.parseFloat = function(x) {
 	return parseFloat(x);
 };
@@ -477,45 +582,7 @@ var StringBuf = function() {
 $hxClasses["StringBuf"] = StringBuf;
 StringBuf.__name__ = true;
 StringBuf.prototype = {
-	add: function(x) {
-		this.b += Std.string(x);
-	}
-	,addSub: function(s,pos,len) {
-		if(len == null) this.b += HxOverrides.substr(s,pos,null); else this.b += HxOverrides.substr(s,pos,len);
-	}
-	,__class__: StringBuf
-};
-var StringTools = function() { };
-$hxClasses["StringTools"] = StringTools;
-StringTools.__name__ = true;
-StringTools.htmlEscape = function(s,quotes) {
-	s = s.split("&").join("&amp;").split("<").join("&lt;").split(">").join("&gt;");
-	if(quotes) return s.split('"').join("&quot;").split("'").join("&#039;"); else return s;
-};
-StringTools.isSpace = function(s,pos) {
-	var c = HxOverrides.cca(s,pos);
-	return c > 8 && c < 14 || c == 32;
-};
-StringTools.ltrim = function(s) {
-	var l = s.length;
-	var r = 0;
-	while(r < l && StringTools.isSpace(s,r)) r++;
-	if(r > 0) return HxOverrides.substr(s,r,l - r); else return s;
-};
-StringTools.rtrim = function(s) {
-	var l = s.length;
-	var r = 0;
-	while(r < l && StringTools.isSpace(s,l - r - 1)) r++;
-	if(r > 0) return HxOverrides.substr(s,0,l - r); else return s;
-};
-StringTools.trim = function(s) {
-	return StringTools.ltrim(StringTools.rtrim(s));
-};
-StringTools.replace = function(s,sub,by) {
-	return s.split(sub).join(by);
-};
-StringTools.fastCodeAt = function(s,index) {
-	return s.charCodeAt(index);
+	__class__: StringBuf
 };
 var Type = function() { };
 $hxClasses["Type"] = Type;
@@ -539,146 +606,6 @@ Type.createEnumIndex = function(e,index,params) {
 	var c = e.__constructs__[index];
 	if(c == null) throw index + " is not a valid enum constructor index";
 	return Type.createEnum(e,c,params);
-};
-var XmlType = { __ename__ : true, __constructs__ : [] };
-var Xml = function() {
-};
-$hxClasses["Xml"] = Xml;
-Xml.__name__ = true;
-Xml.parse = function(str) {
-	return haxe.xml.Parser.parse(str);
-};
-Xml.createElement = function(name) {
-	var r = new Xml();
-	r.nodeType = Xml.Element;
-	r._children = new Array();
-	r._attributes = new haxe.ds.StringMap();
-	r.set_nodeName(name);
-	return r;
-};
-Xml.createPCData = function(data) {
-	var r = new Xml();
-	r.nodeType = Xml.PCData;
-	r.set_nodeValue(data);
-	return r;
-};
-Xml.createCData = function(data) {
-	var r = new Xml();
-	r.nodeType = Xml.CData;
-	r.set_nodeValue(data);
-	return r;
-};
-Xml.createComment = function(data) {
-	var r = new Xml();
-	r.nodeType = Xml.Comment;
-	r.set_nodeValue(data);
-	return r;
-};
-Xml.createDocType = function(data) {
-	var r = new Xml();
-	r.nodeType = Xml.DocType;
-	r.set_nodeValue(data);
-	return r;
-};
-Xml.createProcessingInstruction = function(data) {
-	var r = new Xml();
-	r.nodeType = Xml.ProcessingInstruction;
-	r.set_nodeValue(data);
-	return r;
-};
-Xml.createDocument = function() {
-	var r = new Xml();
-	r.nodeType = Xml.Document;
-	r._children = new Array();
-	return r;
-};
-Xml.prototype = {
-	get_nodeName: function() {
-		if(this.nodeType != Xml.Element) throw "bad nodeType";
-		return this._nodeName;
-	}
-	,set_nodeName: function(n) {
-		if(this.nodeType != Xml.Element) throw "bad nodeType";
-		return this._nodeName = n;
-	}
-	,set_nodeValue: function(v) {
-		if(this.nodeType == Xml.Element || this.nodeType == Xml.Document) throw "bad nodeType";
-		return this._nodeValue = v;
-	}
-	,get: function(att) {
-		if(this.nodeType != Xml.Element) throw "bad nodeType";
-		return this._attributes.get(att);
-	}
-	,set: function(att,value) {
-		if(this.nodeType != Xml.Element) throw "bad nodeType";
-		this._attributes.set(att,value);
-	}
-	,exists: function(att) {
-		if(this.nodeType != Xml.Element) throw "bad nodeType";
-		return this._attributes.exists(att);
-	}
-	,iterator: function() {
-		if(this._children == null) throw "bad nodetype";
-		return { cur : 0, x : this._children, hasNext : function() {
-			return this.cur < this.x.length;
-		}, next : function() {
-			return this.x[this.cur++];
-		}};
-	}
-	,firstChild: function() {
-		if(this._children == null) throw "bad nodetype";
-		return this._children[0];
-	}
-	,addChild: function(x) {
-		if(this._children == null) throw "bad nodetype";
-		if(x._parent != null) HxOverrides.remove(x._parent._children,x);
-		x._parent = this;
-		this._children.push(x);
-	}
-	,insertChild: function(x,pos) {
-		if(this._children == null) throw "bad nodetype";
-		if(x._parent != null) HxOverrides.remove(x._parent._children,x);
-		x._parent = this;
-		this._children.splice(pos,0,x);
-	}
-	,toString: function() {
-		if(this.nodeType == Xml.PCData) return StringTools.htmlEscape(this._nodeValue);
-		if(this.nodeType == Xml.CData) return "<![CDATA[" + this._nodeValue + "]]>";
-		if(this.nodeType == Xml.Comment) return "<!--" + this._nodeValue + "-->";
-		if(this.nodeType == Xml.DocType) return "<!DOCTYPE " + this._nodeValue + ">";
-		if(this.nodeType == Xml.ProcessingInstruction) return "<?" + this._nodeValue + "?>";
-		var s = new StringBuf();
-		if(this.nodeType == Xml.Element) {
-			s.b += "<";
-			s.b += Std.string(this._nodeName);
-			var $it0 = this._attributes.keys();
-			while( $it0.hasNext() ) {
-				var k = $it0.next();
-				s.b += " ";
-				if(k == null) s.b += "null"; else s.b += "" + k;
-				s.b += '="';
-				s.add(this._attributes.get(k));
-				s.b += '"';
-			}
-			if(this._children.length == 0) {
-				s.b += "/>";
-				return s.b;
-			}
-			s.b += ">";
-		}
-		var $it1 = this.iterator();
-		while( $it1.hasNext() ) {
-			var x = $it1.next();
-			s.add(x.toString());
-		}
-		if(this.nodeType == Xml.Element) {
-			s.b += "</";
-			s.b += Std.string(this._nodeName);
-			s.b += ">";
-		}
-		return s.b;
-	}
-	,__class__: Xml
 };
 var bs = {};
 bs.BomberCommands = function() { };
@@ -961,32 +888,33 @@ exp.ExportLayer.prototype = {
 		return this.height = Math.round(f * 100) / 100;
 	}
 	,'export': function() {
-		Global._trace("export",{ fileName : "ExportLayer.hx", lineNumber : 48, className : "exp.ExportLayer", methodName : "export"});
+		Global._trace("export",{ fileName : "ExportLayer.hx", lineNumber : 49, className : "exp.ExportLayer", methodName : "export"});
 		if(this.orig != null && (this.behaviour & 1 << exp.Behave.Exportable[1]) != 0) {
 			if((this.behaviour & 1 << exp.Behave.Visible[1]) != 0) this.visible = true; else this.visible = false;
 			try {
 				if((this.behaviour & 1 << exp.Behave.Svg[1]) != 0) {
-					Global._trace("--------------svg style--------",{ fileName : "ExportLayer.hx", lineNumber : 57, className : "exp.ExportLayer", methodName : "export"});
+					Global._trace("--------------svg style--------",{ fileName : "ExportLayer.hx", lineNumber : 58, className : "exp.ExportLayer", methodName : "export"});
 					this.exportData = helpers.Layer.exportSvg(this.orig,helpers.Document.dir(Global.doc) + "view/images",this.config);
 					this.type = exp.ExportTypes.Svg;
 					this.format = "svg";
 					this.src = this.relativeSrc(this.exportData.path);
 					return this;
 				}
-				if((this.behaviour & 1 << exp.Behave.Scale[1]) != 0) Global._trace("-------------------scale" + this.extractScaleFactor(this.name),{ fileName : "ExportLayer.hx", lineNumber : 65, className : "exp.ExportLayer", methodName : "export"});
+				if((this.behaviour & 1 << exp.Behave.Scale[1]) != 0) Global._trace("-------------------scale" + this.extractScaleFactor(this.name),{ fileName : "ExportLayer.hx", lineNumber : 66, className : "exp.ExportLayer", methodName : "export"});
 				if((this.behaviour & 1 << exp.Behave.Mask[1]) != 0) {
 					this.type = exp.ExportTypes.Mask;
 					this.exportData = helpers.Layer["export"](this.orig,helpers.Document.dir(Global.doc) + "view/images",1,this.config);
-					Global._trace("-------------------------has mask",{ fileName : "ExportLayer.hx", lineNumber : 69, className : "exp.ExportLayer", methodName : "export"});
+					Global._trace("-------------------------has mask",{ fileName : "ExportLayer.hx", lineNumber : 70, className : "exp.ExportLayer", methodName : "export"});
 				}
 				if(!((this.behaviour & 1 << exp.Behave.Flat[1]) != 0)) {
 					if((this.behaviour & 1 << exp.Behave.Skip[1]) != 0) this.exportData = helpers.Layer["export"](this.orig,helpers.Document.dir(Global.doc) + "view/imuges",1,this.config); else this.exportData = helpers.Layer["export"](this.orig,helpers.Document.dir(Global.doc) + "view/images",1,this.config);
 				} else if(!((this.behaviour & 1 << exp.Behave.Mask[1]) != 0)) {
-					Global._trace("-------------------------has flat",{ fileName : "ExportLayer.hx", lineNumber : 79, className : "exp.ExportLayer", methodName : "export"});
+					Global._trace("-------------------------has flat",{ fileName : "ExportLayer.hx", lineNumber : 80, className : "exp.ExportLayer", methodName : "export"});
 					this.exportData = helpers.Layer["export"](this.orig,helpers.Document.dir(Global.doc) + "view/images",1,this.config);
 					this.type = exp.ExportTypes.Image;
 				}
 				this.src = this.exportData.name;
+				this.rootSrc = this.relativeSrc(this.exportData.path);
 			} catch( err ) {
 				Global.log("Error=" + Std.string(err));
 			}
@@ -1004,10 +932,10 @@ exp.ExportLayer.prototype = {
 	,afterExport: function() {
 	}
 	,relativeSrc: function(absolutePath) {
-		Global._trace(absolutePath,{ fileName : "ExportLayer.hx", lineNumber : 117, className : "exp.ExportLayer", methodName : "relativeSrc"});
-		Global._trace(helpers.Document.dir(Global.doc),{ fileName : "ExportLayer.hx", lineNumber : 118, className : "exp.ExportLayer", methodName : "relativeSrc"});
+		Global._trace(absolutePath,{ fileName : "ExportLayer.hx", lineNumber : 119, className : "exp.ExportLayer", methodName : "relativeSrc"});
+		Global._trace(helpers.Document.dir(Global.doc),{ fileName : "ExportLayer.hx", lineNumber : 120, className : "exp.ExportLayer", methodName : "relativeSrc"});
 		var relative = StringTools.replace(absolutePath,helpers.Document.dir(Global.doc),"");
-		Global._trace(relative,{ fileName : "ExportLayer.hx", lineNumber : 122, className : "exp.ExportLayer", methodName : "relativeSrc"});
+		Global._trace(relative,{ fileName : "ExportLayer.hx", lineNumber : 124, className : "exp.ExportLayer", methodName : "relativeSrc"});
 		return relative;
 	}
 	,extractScaleFactor: function(name) {
@@ -1492,279 +1420,6 @@ haxe.ds.IntMap.prototype = {
 	}
 	,__class__: haxe.ds.IntMap
 };
-haxe.ds.StringMap = function() {
-	this.h = { };
-};
-$hxClasses["haxe.ds.StringMap"] = haxe.ds.StringMap;
-haxe.ds.StringMap.__name__ = true;
-haxe.ds.StringMap.__interfaces__ = [IMap];
-haxe.ds.StringMap.prototype = {
-	set: function(key,value) {
-		this.h["$" + key] = value;
-	}
-	,get: function(key) {
-		return this.h["$" + key];
-	}
-	,exists: function(key) {
-		return this.h.hasOwnProperty("$" + key);
-	}
-	,keys: function() {
-		var a = [];
-		for( var key in this.h ) {
-		if(this.h.hasOwnProperty(key)) a.push(key.substr(1));
-		}
-		return HxOverrides.iter(a);
-	}
-	,__class__: haxe.ds.StringMap
-};
-haxe.xml = {};
-haxe.xml.Parser = function() { };
-$hxClasses["haxe.xml.Parser"] = haxe.xml.Parser;
-haxe.xml.Parser.__name__ = true;
-haxe.xml.Parser.parse = function(str) {
-	var doc = Xml.createDocument();
-	haxe.xml.Parser.doParse(str,0,doc);
-	return doc;
-};
-haxe.xml.Parser.doParse = function(str,p,parent) {
-	if(p == null) p = 0;
-	var xml = null;
-	var state = 1;
-	var next = 1;
-	var aname = null;
-	var start = 0;
-	var nsubs = 0;
-	var nbrackets = 0;
-	var c = str.charCodeAt(p);
-	var buf = new StringBuf();
-	while(!(c != c)) {
-		switch(state) {
-		case 0:
-			switch(c) {
-			case 10:case 13:case 9:case 32:
-				break;
-			default:
-				state = next;
-				continue;
-			}
-			break;
-		case 1:
-			switch(c) {
-			case 60:
-				state = 0;
-				next = 2;
-				break;
-			default:
-				start = p;
-				state = 13;
-				continue;
-			}
-			break;
-		case 13:
-			if(c == 60) {
-				var child = Xml.createPCData(buf.b + HxOverrides.substr(str,start,p - start));
-				buf = new StringBuf();
-				parent.addChild(child);
-				nsubs++;
-				state = 0;
-				next = 2;
-			} else if(c == 38) {
-				buf.addSub(str,start,p - start);
-				state = 18;
-				next = 13;
-				start = p + 1;
-			}
-			break;
-		case 17:
-			if(c == 93 && str.charCodeAt(p + 1) == 93 && str.charCodeAt(p + 2) == 62) {
-				var child1 = Xml.createCData(HxOverrides.substr(str,start,p - start));
-				parent.addChild(child1);
-				nsubs++;
-				p += 2;
-				state = 1;
-			}
-			break;
-		case 2:
-			switch(c) {
-			case 33:
-				if(str.charCodeAt(p + 1) == 91) {
-					p += 2;
-					if(HxOverrides.substr(str,p,6).toUpperCase() != "CDATA[") throw "Expected <![CDATA[";
-					p += 5;
-					state = 17;
-					start = p + 1;
-				} else if(str.charCodeAt(p + 1) == 68 || str.charCodeAt(p + 1) == 100) {
-					if(HxOverrides.substr(str,p + 2,6).toUpperCase() != "OCTYPE") throw "Expected <!DOCTYPE";
-					p += 8;
-					state = 16;
-					start = p + 1;
-				} else if(str.charCodeAt(p + 1) != 45 || str.charCodeAt(p + 2) != 45) throw "Expected <!--"; else {
-					p += 2;
-					state = 15;
-					start = p + 1;
-				}
-				break;
-			case 63:
-				state = 14;
-				start = p;
-				break;
-			case 47:
-				if(parent == null) throw "Expected node name";
-				start = p + 1;
-				state = 0;
-				next = 10;
-				break;
-			default:
-				state = 3;
-				start = p;
-				continue;
-			}
-			break;
-		case 3:
-			if(!(c >= 97 && c <= 122 || c >= 65 && c <= 90 || c >= 48 && c <= 57 || c == 58 || c == 46 || c == 95 || c == 45)) {
-				if(p == start) throw "Expected node name";
-				xml = Xml.createElement(HxOverrides.substr(str,start,p - start));
-				parent.addChild(xml);
-				state = 0;
-				next = 4;
-				continue;
-			}
-			break;
-		case 4:
-			switch(c) {
-			case 47:
-				state = 11;
-				nsubs++;
-				break;
-			case 62:
-				state = 9;
-				nsubs++;
-				break;
-			default:
-				state = 5;
-				start = p;
-				continue;
-			}
-			break;
-		case 5:
-			if(!(c >= 97 && c <= 122 || c >= 65 && c <= 90 || c >= 48 && c <= 57 || c == 58 || c == 46 || c == 95 || c == 45)) {
-				var tmp;
-				if(start == p) throw "Expected attribute name";
-				tmp = HxOverrides.substr(str,start,p - start);
-				aname = tmp;
-				if(xml.exists(aname)) throw "Duplicate attribute";
-				state = 0;
-				next = 6;
-				continue;
-			}
-			break;
-		case 6:
-			switch(c) {
-			case 61:
-				state = 0;
-				next = 7;
-				break;
-			default:
-				throw "Expected =";
-			}
-			break;
-		case 7:
-			switch(c) {
-			case 34:case 39:
-				state = 8;
-				start = p;
-				break;
-			default:
-				throw "Expected ";
-			}
-			break;
-		case 8:
-			if(c == str.charCodeAt(start)) {
-				var val = HxOverrides.substr(str,start + 1,p - start - 1);
-				xml.set(aname,val);
-				state = 0;
-				next = 4;
-			}
-			break;
-		case 9:
-			p = haxe.xml.Parser.doParse(str,p,xml);
-			start = p;
-			state = 1;
-			break;
-		case 11:
-			switch(c) {
-			case 62:
-				state = 1;
-				break;
-			default:
-				throw "Expected >";
-			}
-			break;
-		case 12:
-			switch(c) {
-			case 62:
-				if(nsubs == 0) parent.addChild(Xml.createPCData(""));
-				return p;
-			default:
-				throw "Expected >";
-			}
-			break;
-		case 10:
-			if(!(c >= 97 && c <= 122 || c >= 65 && c <= 90 || c >= 48 && c <= 57 || c == 58 || c == 46 || c == 95 || c == 45)) {
-				if(start == p) throw "Expected node name";
-				var v = HxOverrides.substr(str,start,p - start);
-				if(v != parent.get_nodeName()) throw "Expected </" + parent.get_nodeName() + ">";
-				state = 0;
-				next = 12;
-				continue;
-			}
-			break;
-		case 15:
-			if(c == 45 && str.charCodeAt(p + 1) == 45 && str.charCodeAt(p + 2) == 62) {
-				parent.addChild(Xml.createComment(HxOverrides.substr(str,start,p - start)));
-				p += 2;
-				state = 1;
-			}
-			break;
-		case 16:
-			if(c == 91) nbrackets++; else if(c == 93) nbrackets--; else if(c == 62 && nbrackets == 0) {
-				parent.addChild(Xml.createDocType(HxOverrides.substr(str,start,p - start)));
-				state = 1;
-			}
-			break;
-		case 14:
-			if(c == 63 && str.charCodeAt(p + 1) == 62) {
-				p++;
-				var str1 = HxOverrides.substr(str,start + 1,p - start - 2);
-				parent.addChild(Xml.createProcessingInstruction(str1));
-				state = 1;
-			}
-			break;
-		case 18:
-			if(c == 59) {
-				var s = HxOverrides.substr(str,start,p - start);
-				if(s.charCodeAt(0) == 35) {
-					var i;
-					if(s.charCodeAt(1) == 120) i = Std.parseInt("0" + HxOverrides.substr(s,1,s.length - 1)); else i = Std.parseInt(HxOverrides.substr(s,1,s.length - 1));
-					buf.add(String.fromCharCode(i));
-				} else if(!haxe.xml.Parser.escapes.exists(s)) buf.b += Std.string("&" + s + ";"); else buf.add(haxe.xml.Parser.escapes.get(s));
-				start = p + 1;
-				state = next;
-			}
-			break;
-		}
-		c = StringTools.fastCodeAt(str,++p);
-	}
-	if(state == 1) {
-		start = p;
-		state = 13;
-	}
-	if(state == 13) {
-		if(p != start || nsubs == 0) parent.addChild(Xml.createPCData(buf.b + HxOverrides.substr(str,start,p - start)));
-		return p;
-	}
-	throw "Unexpected end";
-};
 var helpers = {};
 helpers.Artboard = function() { };
 $hxClasses["helpers.Artboard"] = helpers.Artboard;
@@ -2055,18 +1710,6 @@ helpers.StringSketch.endsWith = function(str,ends) {
 	if(ends == null) ends = "null"; else ends = "" + ends;
 	return str.length >= ends.length && HxOverrides.substr(str,str.length - ends.length,null) == ends;
 };
-helpers.StringSketch.getTextTag = function(text) {
-	var textname;
-	if(text == null) textname = "null"; else textname = "" + text;
-	var tags = new EReg("^<(a|blockquote|div|h1|h2|h3|h4|h5|h6|label|p|span)>","");
-	if(tags.match(textname)) {
-		var name = tags.replace(textname,"");
-		var tag = tags.matched(0);
-		var tagName = tags.matched(1);
-		return { name : name, tag : tag, tagName : tagName};
-	}
-	return { name : textname, tag : "<span>", tagName : "span"};
-};
 helpers.UI = function() { };
 $hxClasses["helpers.UI"] = helpers.UI;
 helpers.UI.__name__ = true;
@@ -2196,9 +1839,6 @@ var $_, $fid = 0;
 function $bind(o,m) { if( m == null ) return null; if( m.__id__ == null ) m.__id__ = $fid++; var f; if( o.hx__closures__ == null ) o.hx__closures__ = {}; else f = o.hx__closures__[m.__id__]; if( f == null ) { f = function(){ return f.method.apply(f.scope, arguments); }; f.scope = o; f.method = m; o.hx__closures__[m.__id__] = f; } return f; }
 Global.doc = doc;
 Global.selection = selection;
-if(Array.prototype.indexOf) HxOverrides.indexOf = function(a,o,i) {
-	return Array.prototype.indexOf.call(a,o,i);
-};
 Math.NaN = Number.NaN;
 Math.NEGATIVE_INFINITY = Number.NEGATIVE_INFINITY;
 Math.POSITIVE_INFINITY = Number.POSITIVE_INFINITY;
@@ -2221,29 +1861,15 @@ var Bool = Boolean;
 Bool.__ename__ = ["Bool"];
 var Class = $hxClasses.Class = { __name__ : ["Class"]};
 var Enum = { };
-Xml.Element = "element";
-Xml.PCData = "pcdata";
-Xml.CData = "cdata";
-Xml.Comment = "comment";
-Xml.DocType = "doctype";
-Xml.ProcessingInstruction = "processingInstruction";
-Xml.Document = "document";
-HtmlView.__meta__ = { obj : { template : ["\n<!doctype html><html lang=\"en\"><head><meta charset=\"UTF-8\" /><title>@title</title>\n<style>\nimg{display:block;}\n</style>\n</head><body>\n@content\n</body></html>\n\n\t"]}};
+FramerExporter.framerjs_url = "http://rawgit.com/koenbok/Framer/master/build/framer.js";
+FramerExporter.framerPS = "var loadViews = function() {\n\t\n\tvar Views = []\n\tvar ViewsByName = {}\n\t\n\tcreateView = function(info, superView) {\n\t\t\n\t\t// console.log(\"createView\", info.name, \"superView: \", superView)\n\t\t\n\t\tvar viewType, viewFrame\n\t\tvar viewInfo = {\n\t\t\tclip: false\n\t\t}\n\t\t\n\t\tif (info.image) {\n\t\t\tviewType = ImageView\n\t\t\tviewFrame = info.image.frame\n\t\t\tviewInfo.image = \"images/\" + info.name + \".\" + info.imageType\n\t\t}\n\t\t\n\t\telse {\n\t\t\tviewType = View\n\t\t\tviewFrame = info.layerFrame\n\t\t\tviewInfo.style = { background: 'transparent' }\n\t\t}\n\n\t\tviewInfo.visible = info.visible\n\t\t\n\t\t// If this layer group has a mask, we take the mask bounds\n\t\t// as the frame and clip the layer\n\t\tif (info.maskFrame) {\n\t\t\tviewFrame = info.maskFrame\n\t\t\tviewInfo.clip = true\n\t\t\t\n\t\t\t// If the layer name has \"scroll\" we make this a scroll view\n\t\t\tif (info.name.toLowerCase().indexOf(\"scroll\") != -1) {\n\t\t\t\tviewType = ScrollView\n\t\t\t}\n\t\t\t\n\t\t\t// If the layer name has \"paging\" we make this a paging view\n\t\t\tif (info.name.toLowerCase().indexOf(\"paging\") != -1) {\n\t\t\t\tviewType = ui.PagingView\n\t\t\t}\n\n\t\t}\n\t\t\n\t\tvar view = new viewType(viewInfo)\n\t\t\n\t\tview.frame = viewFrame\n\t\t\n\t\t// If the view has a contentview (like a scrollview) we add it\n\t\t// to that one instead.\n\t\tif (superView && superView.contentView) {\n\t\t\tview.superView = superView.contentView\n\t\t} else {\n\t\t\tview.superView = superView\n\t\t}\n\t\t\n\t\tview.name = info.name\n\t\tview.viewInfo = info\n\t\t\n\t\tViews.push(view)\n\t\tViewsByName[info.name] = view\n\n\t\t// If the layer name contains draggable we create a draggable for this layer\n\t\tif (info.name.toLowerCase().indexOf(\"draggable\") != -1) {\n\t\t\tview.draggable = new ui.Draggable(view)\n\t\t}\n\n\t\tfor (var i in info.children) {\n\t\t\tcreateView(info.children[info.children.length - 1 - i], view)\n\t\t}\n\n\t}\n\t\t\n\t// Loop through all the photoshop documents\n\tfor (var documentName in FramerPS) {\n\t\t// Load the layers for this document\n\t\tfor (var layerIndex in FramerPS[documentName]) {\n\t\t\tcreateView(FramerPS[documentName][layerIndex])\n\t\t}\n\t}\n\t\n\t\n\tfor (var i in Views) {\n\t\t\n\t\tvar view = Views[i]\n\t\t\n\t\t// // Views without subviews and image should be 0x0 pixels\n\t\tif (!view.image && !view.viewInfo.maskFrame && !view.subViews.length) {\n\t\t\tconsole.log(view.name, view.viewInfo.maskFrame)\n\t\t\tview.frame = {x:0, y:0, width:0, height:0}\n\t\t}\n\t\t\n\t\tfunction shouldCorrectView(view) {\n\t\t\treturn !view.image && !view.viewInfo.maskFrame\n\t\t}\n\n\t\t// If a view has no image or mask, make it the size of it's combined subviews\n\t\tif (shouldCorrectView(view)) {\n\n\t\t\tvar frame = null\n\t\t\t\n\t\t\tfunction traverse(views) {\n\t\t\t\tviews.map(function(view) {\n\n\t\t\t\t\tif (shouldCorrectView(view)) {\n\t\t\t\t\t\treturn\n\t\t\t\t\t}\n\n\t\t\t\t\tif (!frame) {\n\t\t\t\t\t\tframe = view.frame\n\t\t\t\t\t} else {\n\t\t\t\t\t\tframe = frame.merge(view.frame)\n\t\t\t\t\t}\n\n\t\t\t\t\ttraverse(view.subViews)\n\t\t\t\t})\n\t\t\t}\n\t\t\t\n\t\t\ttraverse(view.subViews)\n\t\t\tview.frame = frame\n\t\t\t\n\t\t}\n\t\t\n\t\t// Correct all the view frames for the superView coordinate system\n\t\tif (view.superView) {\n\t\t\tview.frame = view.superView.convertPoint(view.frame)\n\t\t}\n\t\t\n\t}\n\t\n\treturn ViewsByName\n\n}\n\nwindow.PSD = loadViews()\n";
+FramerExporter.document_path = Global.doc.fileURL().path().split(Global.doc.displayName())[0];
+FramerExporter.document_name = StringTools.replace(Global.doc.displayName(),".sketch","");
+FramerExporter.target_folder = FramerExporter.document_path;
+FramerExporter.framer_folder = FramerExporter.target_folder + "/framer";
 de.polygonal.ds.HashKey._counter = 0;
 exp.Config.defaults = { imagesPath : "/view/images", scale : 1, format : "png", forceConfig : true, allArtBoards : false, allPages : false, cleanUp : false, forceSlices : false};
 exp.ExportFactory.config = exp.Config.defaults;
-haxe.xml.Parser.escapes = (function($this) {
-	var $r;
-	var h = new haxe.ds.StringMap();
-	h.set("lt","<");
-	h.set("gt",">");
-	h.set("amp","&");
-	h.set("quot",'"');
-	h.set("apos","'");
-	h.set("nbsp",String.fromCharCode(160));
-	$r = h;
-	return $r;
-}(this));
 helpers.Artboard.hiddenLayers = new haxe.ds.IntMap();
-HTMLExporter.main();
+HaxeExporter.main();
 })();

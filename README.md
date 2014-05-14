@@ -27,7 +27,7 @@ polygonal-ds (Tree)
 
 
 #TODO:
-
+- shared graphics ( one folder for symbols)
 - clean stuff
 - use sketchApi as haxelib
 - use it on a real use case 
