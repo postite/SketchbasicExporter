@@ -130,11 +130,12 @@ class BasicExporter
 			
 		for (page in doc.pages()){
 			doc.setCurrentPage(page);
-
-			builder.appendChild(exp.ExportFactory.create(page).export());
+			var factoPage=exp.ExportFactory.create(page);
+			if( factoPage!=null){
+			builder.appendChild(factoPage.export());
 			_trace(indent+page.name());
 			ArtboardsLoop(cast page.artboards());
-			
+			}
 			
 		}
 		doc.setCurrentPage(activePage);
@@ -187,6 +188,7 @@ class BasicExporter
 		var exportable=exp.ExportFactory.create(art);
 			if(exportable!=null){
 				try
+				if(config.cleanUp==true) // TODO specify for cache 
 			cleanupArtboardDir(cast selection.firstObject())
 				catch(msg:Dynamic)_trace("cleanupFailed");
 			builder.appendChild(exportable.export());
