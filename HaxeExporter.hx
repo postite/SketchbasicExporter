@@ -3,7 +3,16 @@ import de.polygonal.ds.TreeNode;
 import exp.*;
 import FramerExporter;
 using helpers.Document;
+
+
+typedef PropsLayerType={
+	>LayerType,
+	props:Dynamic
+}
+
 class HaxeExporter extends FramerExporter{
+
+
 
 
 	function new():Void
@@ -37,11 +46,12 @@ class HaxeExporter extends FramerExporter{
 			var treeNode=tree.find(node); //heavy
 			//_trace("for in tree");
 			//generic 
-			var layer:LayerType=cast {};
+			var layer:PropsLayerType=cast {};
 			var _node= cast(node,exp.ExportLayer);
 
 				layer.id=++id;
 				layer.name=_node.name;
+				layer.props=_node.props;
 					var layerframe:LayerFrame= cast {};
 					//_trace('height=${_node.height} type=${_node.type} visible=${_node.visible}');
 					layerframe.height=_node.height;
@@ -57,6 +67,7 @@ class HaxeExporter extends FramerExporter{
 				layer.text=null;
 				layer.visible=_node.visible;
 				layer.children=[];
+				
 
 			//_trace("switch type"+node.type);
 			switch(node.type){
