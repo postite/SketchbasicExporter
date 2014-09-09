@@ -1,4 +1,4 @@
-// basicExporter.jstalk (cmd alt ctrl e) 
+// templateExporter.jstalk (cmd alt ctrl z) 
 (function () { "use strict";
 var $hxClasses = {},$estr = function() { return js.Boot.__string_rec(this,''); };
 function $extend(from, fields) {
@@ -228,9 +228,6 @@ var HTMLExporter = function() {
 };
 $hxClasses["HTMLExporter"] = HTMLExporter;
 HTMLExporter.__name__ = true;
-HTMLExporter.main = function() {
-	new HTMLExporter();
-};
 HTMLExporter.addAtt = function(node,attributeName,value) {
 	if(node.exists(attributeName)) {
 		var stringlist = node.get(attributeName);
@@ -650,6 +647,53 @@ StringTools.replace = function(s,sub,by) {
 StringTools.fastCodeAt = function(s,index) {
 	return s.charCodeAt(index);
 };
+var TemplateExporter = function() {
+	HTMLExporter.call(this);
+};
+$hxClasses["TemplateExporter"] = TemplateExporter;
+TemplateExporter.__name__ = true;
+TemplateExporter.main = function() {
+	var app = new TemplateExporter();
+};
+TemplateExporter.__super__ = HTMLExporter;
+TemplateExporter.prototype = $extend(HTMLExporter.prototype,{
+	exportHtml: function() {
+		var t = new IncView();
+		t.data = { content : this.html.firstElement().firstElement().toString()};
+		var $export = t.execute();
+		Global.writeToFile($export,this.config.imagesPath + this.activePage.name() + "/" + this.activeArtboard.name() + ".html",null);
+	}
+	,__class__: TemplateExporter
+});
+erazor.macro.SimpleTemplate = function() {
+	erazor.macro.Template.call(this);
+};
+$hxClasses["erazor.macro.SimpleTemplate"] = erazor.macro.SimpleTemplate;
+erazor.macro.SimpleTemplate.__name__ = true;
+erazor.macro.SimpleTemplate.__super__ = erazor.macro.Template;
+erazor.macro.SimpleTemplate.prototype = $extend(erazor.macro.Template.prototype,{
+	__class__: erazor.macro.SimpleTemplate
+});
+var IncView = function() {
+	erazor.macro.SimpleTemplate.call(this);
+};
+$hxClasses["IncView"] = IncView;
+IncView.__name__ = true;
+IncView.__super__ = erazor.macro.SimpleTemplate;
+IncView.prototype = $extend(erazor.macro.SimpleTemplate.prototype,{
+	execute: function() {
+		var __b__ = new erazor.Output($bind(this,this.escape));
+		if(this.data.styles != null) {
+			__b__.b += "<style>";
+			__b__.unsafeAdd(this.data.styles);
+			__b__.b += "</style> \n ";
+			null;
+		}
+		__b__.unsafeAdd(this.data.content);
+		return __b__.b;
+	}
+	,__class__: IncView
+});
 var Type = function() { };
 $hxClasses["Type"] = Type;
 Type.__name__ = true;
@@ -761,6 +805,17 @@ Xml.prototype = {
 	,firstChild: function() {
 		if(this._children == null) throw "bad nodetype";
 		return this._children[0];
+	}
+	,firstElement: function() {
+		if(this._children == null) throw "bad nodetype";
+		var cur = 0;
+		var l = this._children.length;
+		while(cur < l) {
+			var n = this._children[cur];
+			if(n.nodeType == Xml.Element) return n;
+			cur++;
+		}
+		return null;
 	}
 	,addChild: function(x) {
 		if(this._children == null) throw "bad nodetype";
@@ -2633,6 +2688,7 @@ Xml.DocType = "doctype";
 Xml.ProcessingInstruction = "processingInstruction";
 Xml.Document = "document";
 HtmlView.__meta__ = { obj : { template : ["<html lang=\"fr\"><head><meta charset=\"UTF-8\" /><title>@title</title>\n<style>\nimg{display:block;}\n@textStyles\n</style>\n<script src=\"client.js\"></script>\n<link rel=\"stylesheet\" href=\"style.css\" />\n</head><body>\n@content\n</body></html>\n\t"]}};
+IncView.__meta__ = { obj : { template : ["@if(styles!=null){<style>@styles</style> \n }@content"]}};
 de.polygonal.ds.HashKey._counter = 0;
 exp.Config.defaults = { imagesPath : "/view/images", scale : 1, format : "png", forceConfig : true, allArtBoards : false, allPages : false, cleanUp : false, forceSlices : false};
 exp.ExportFactory.config = exp.Config.defaults;
@@ -2650,5 +2706,5 @@ haxe.xml.Parser.escapes = (function($this) {
 }(this));
 helpers.Artboard.toggleincludeinExport = false;
 helpers.Artboard.hiddenLayers = new haxe.ds.IntMap();
-HTMLExporter.main();
+TemplateExporter.main();
 })();

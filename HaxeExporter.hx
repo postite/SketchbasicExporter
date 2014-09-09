@@ -7,7 +7,8 @@ using helpers.Document;
 
 typedef PropsLayerType={
 	>LayerType,
-	props:Dynamic
+	props:Dynamic,
+	type:String
 }
 
 class HaxeExporter extends FramerExporter{
@@ -67,7 +68,7 @@ class HaxeExporter extends FramerExporter{
 				layer.text=null;
 				layer.visible=_node.visible;
 				layer.children=[];
-				
+				layer.type=Std.string (_node.type);
 
 			//_trace("switch type"+node.type);
 			switch(node.type){
@@ -111,6 +112,7 @@ class HaxeExporter extends FramerExporter{
 			if(obj==null){
 				obj=[];
 				obj.push(layer);
+
 			}else if(_node.type==Page){
 				//listeArts= new List();
 				obj.push(layer);

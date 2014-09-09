@@ -273,7 +273,7 @@ class BasicExporter
 					_node.set("class","page");
 				case ArtBoard:
 					_node.set("class","artboard");
-				case Text:
+				case Text,StyledText:
 					 _node.set("class","text");
 					 
 					 _node.insertChild(Xml.createCData(cast (node,exp.ExportText).text.text),0);
@@ -295,6 +295,9 @@ class BasicExporter
 					_node.set("class","slice");
 				case Mask:
 					_node.set("class","mask");
+				case Zone:
+				case Symbol:
+				case Mock:
 					
 			}
 			

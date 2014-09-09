@@ -1,0 +1,29 @@
+ -cp basicExporter
+ -cp sketchApi
+ --each
+
+
+#-main FramerExporter
+-main ZoneExporter
+
+-cp sketchApi
+-lib erazor
+-lib polygonal-ds
+-js basicExporter/out/ZoneExporter.jstalk
+#-D haxeJSON
+-debug
+-dce full
+
+
+# --next
+# -main Config
+# -js basicExporter/out/Config.jstalk
+# --next 
+
+--next 
+-main CopyPlug
+-neko copyPlug.n
+-cmd neko copyPlug '[{"name":"ZoneExporter.jstalk" ,"key":"cmd alt ctrl y"}]'
+
+
+
