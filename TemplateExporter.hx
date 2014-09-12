@@ -19,7 +19,7 @@ class TemplateExporter extends HTMLExporter
 		// t.inc=function(s:String)return "inked";
 		var export = t.execute();
 		//Global.writeToFile(export,config.imagesPath+activePage.name()+"/"+activeArtboard.name()+"/"+activeArtboard.name()+".html");
-		Global.writeToFile(export,config.imagesPath+activePage.name()+"/"+activeArtboard.name()+".html");
+		Global.writeToDir(export,config.modelPath+"/"+activeArtboard.name()+".html");
 	}
 
 	static public function main()

@@ -31,12 +31,13 @@ class HTMLExporter extends BasicExporter
 
 	override function setup():Void
 	{
-		_trace( "setup");
+		
 		var conf= new Config();
-		Config.defaults.imagesPath=doc.dir()+"/html/images/";
+		//Config.defaults.imagesPath=doc.dir()+"/html/images/";
 
 		conf.check();
 		config=exp.ExportFactory.config=conf.data;
+		
 		//_trace(config);
 		if (config.cleanUp==true)
 		cleanup();
@@ -46,11 +47,11 @@ class HTMLExporter extends BasicExporter
 	{
 		var open_task=ns.NSTask.alloc().init();
 			//var open_task_args=ns.NSArray.arrayWithObjects(config.imagesPath+activePage.name()+"/"+activeArtboard.name()+"/"+activeArtboard.name()+".html");
-			var open_task_args=ns.NSArray.arrayWithObjects(config.imagesPath+activePage.name()+"/"+activeArtboard.name()+".html");
+			var open_task_args=ns.NSArray.arrayWithObjects(config.modelPath+"/"+activeArtboard.name()+".html");
 			//open_task.setCurrentDirectoryPath(framer_folder);
 			open_task.setLaunchPath("/usr/bin/open");
 			open_task.setArguments(open_task_args);
-			untyped _trace( open_task.launchPath());
+			
 			open_task.launch();
 	}
 
@@ -68,7 +69,7 @@ class HTMLExporter extends BasicExporter
 			var castednode:exp.ExportLayer= cast (node,exp.ExportLayer);
 			var treeNode=tree.find(node); //heavy
 			var _node:Xml=null;
-			_trace(node.type);
+			
 			switch(node.type){
 				case Page:
 				_node=Xml.createElement("section");
@@ -91,7 +92,7 @@ class HTMLExporter extends BasicExporter
 					_node.insertChild(img,0);
 				case Text:		
 					_node=processText(cast node,_node,inlineTextStyle);
-					_trace( node);
+					
 					mesureMe=false;
 
 				case StyledText:
@@ -101,7 +102,7 @@ class HTMLExporter extends BasicExporter
 				case Image:
 					_node.set("class","image");
 					var img=Xml.createElement("img");
-					img.set("src",activeArtboard.name()+"/"+node.src);
+					img.set("src",node.src);
 					_node=img;
 					var tag=helpers.StringSketch.getTextTag(node.name,"img");
 					_node.nodeName=tag.tagName;
@@ -244,12 +245,12 @@ class HTMLExporter extends BasicExporter
 
 	}
 	function templateProcess(node:exp.ExportText,_node:Xml,tag:Tag):Xml
-	{
-		// var inc=new HTMLExporter.IncView();
-						// inc.data={content:"<div>pipo</div>"};
-						// var inked= inc.execute();
-						// _node=Xml.parse(inked).firstChild();
-						var template=doc.loadTxt(config.imagesPath+activePage.name()+"/"+tag.name+".html");
+	{	
+
+						var templatePath=doc.dir()+"view/"+activePage.name()+"/"+tag.name+"/"+tag.name+".html";
+						try{
+						
+						var template=doc.loadTxt(templatePath);
 
 						var subNode=Xml.parse(template).firstChild();
 						
@@ -258,14 +259,19 @@ class HTMLExporter extends BasicExporter
 						_node=subNode;
 						_node.addAtt("id",tag.name);
 						_node.addAtt("style","display:none");
+						}catch(msg:Dynamic){
+							_trace( "template WTF _-tried to load "+ templatePath);
+							return Xml.parse("<div></div>").firstChild();
+							
+						}
 						return _node; //firstChild ?
-						//Global.doc.loadTxt(Global.doc.tag.name+".html");
-						//helpers.UI.alert(template);
+
+						
 	}
 	function processText(node:ExportText,_node:Xml,outputFunc:ExportText->Xml->Tag->TextProperties->Xml):Xml{
-					_trace("isText" +node.name);
+					
 					_node.set("class","text");
-					_trace( "kiloz");
+					
 					var tag=helpers.StringSketch.getTextTag(node.name,"span");
 					if (tag.tagName=="T"){
 					_node=templateProcess(cast node,_node,tag);
@@ -295,7 +301,9 @@ class HTMLExporter extends BasicExporter
 		// t.inc=function(s:String)return "inked";
 		var export = t.execute();
 		//Global.writeToFile(export,config.imagesPath+activePage.name()+"/"+activeArtboard.name()+"/"+activeArtboard.name()+".html");
-		Global.writeToFile(export,config.imagesPath+activePage.name()+"/"+activeArtboard.name()+".html");
+		
+		
+		Global.writeToDir(export,config.modelPath+activeArtboard.name()+".html");
 	}
 	public static function main(){
 		new HTMLExporter();
@@ -318,6 +326,7 @@ class HTMLExporter extends BasicExporter
 @template('<html lang="fr"><head><meta charset="UTF-8" /><title>@title</title>
 <style>
 img{display:block;}
+p{margin:0;}
 @textStyles
 </style>
 <script src="client.js"></script>

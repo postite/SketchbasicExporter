@@ -1,15 +1,12 @@
- -cp basicExporter
- -cp sketchApi
- --each
 
-
+-lib SketchApi
 #-main FramerExporter
 -main TemplateExporter
 
--cp sketchApi
 -lib erazor
 -lib polygonal-ds
--js basicExporter/out/templateExporter.jstalk
+-debug
+-js out/templateExporter.sketchplugin
 #-D haxeJSON
 -dce full
 
@@ -18,11 +15,8 @@
 # -main Config
 # -js basicExporter/out/Config.jstalk
 # --next 
+-cmd neko BigCopyPlug.n '[{"dir":"", "name":"templateExporter.sketchplugin" ,"key":"cmd alt ctrl t"}]'
 
---next 
--main CopyPlug
--neko copyPlug.n
--cmd neko copyPlug '[{"name":"templateExporter.jstalk" ,"key":"cmd alt ctrl z"}]'
 
 
 

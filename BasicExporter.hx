@@ -6,7 +6,7 @@ import de.polygonal.ds.TreeBuilder;
 import exp.*;
 import haxe.EnumFlags;
 import exp.Behave;
-import exp.Config;
+ import exp.Config;
 using helpers.UI;
 
 class BasicExporter
@@ -26,83 +26,9 @@ class BasicExporter
 	var activePage:MSPage;
 	public function new()
 	{
-		_trace("----------------start---------------------");
+		log("----------------start---------------------");
 		
-		/*
-		override flagging example
-		exp.ExportFactory.extract=function(name:String){
-			var flags=new EnumFlags();
-		//trace("first="+beginWith(name));
-		//return true;
-
-		 switch(exp.ExportFactory.beginWith(name)){
-		 
-		// case "#": flags.set(Behave.set);
-		 case '@': flags.set(Flat);
-		 case "+": flags.set(Exportable);
-		 //case "_":flags.set(Flat);
-		 case _:flags.unset(Behave.Exportable);
-
-		 //default:  false;
-		 }
-		 return flags;
-
-		}
-		*/
 		
-
-
-
-		// //log(tree.toString());
-		// log("xml");
-		// try{
-		// //had to modify StringTools & haxe.xml.Parse ( '"')
-		// var xml:Xml=Xml.createElement("div");
-		// var xm=toXml(tree,xml);
-		// log( xm.toString());
-		// //exporthtml(haxe.xml.Printer.print(xm));
-		
-		// }catch(msg:Dynamic){
-		// log("xml error"+msg);
-		// }
-		// log("html");
-		// try{
-		
-		// var xml:Xml=Xml.createElement("div");
-		// var html=new HTMLExporter();
-		// html.toHtml(tree,xml);
-		// html.export();
-		
-		// }catch(msg:Dynamic){
-		// log("xml error"+msg);
-		// }
-		// log("jason");
-		// try{
-		// 	var obj={};
-		// 	var jon=toJson(tree,obj);
-		// 	//log(jon.toString());
-		// 	log(haxe.Json.stringify(jon));
-		// 	exportjson( haxe.Json.stringify(jon));
-		// }
-		// catch(msg:Dynamic){
-		// 	log("error"+msg);
-		// }
-		// try{
-			
-		// 	var framer= new FramerExporter();
-		// 	var jsonframe=framer.toJson(tree);
-
-		// 	exportFramer( haxe.Json.stringify(jsonframe));
-		// }catch(msg:Dynamic){
-		// 	_trace("error for framer"+msg);
-		// }
-		// var openPath:String=doc.dir()+"/view/images/"+activePage.name()+"/";
-		// if(config.allArtBoards!=true)
-		// 	openPath=openPath+activeArtboard.name()+"/";
-		
-		// bs.BomberCommands.open_finder_in(openPath);
-		// //log( xm.firstChild().nodeName);
-		// _trace("done");
 		setup();
 	}
 	function setup():Void
@@ -113,11 +39,12 @@ class BasicExporter
 		
 		if (config.cleanUp==true)
 		cleanup();
-
 		_trace("allPages?="+config.allPages);
 	}
-	function generate(){
+	
+	public function generate(){
 
+		//exp.ExportStyledText.createMocks();
 		var indent="*";
 		tree= new TreeNode(cast new exp.ExportContainer(null));
 		builder= new TreeBuilder(tree);
@@ -125,6 +52,7 @@ class BasicExporter
 		
 		if(config.allPages!=true){
 			builder.appendChild(exp.ExportFactory.create(activePage).export());
+
 			ArtboardsLoop(cast activePage.artboards());
 		}else{
 			
@@ -134,6 +62,7 @@ class BasicExporter
 			if( factoPage!=null){
 			builder.appendChild(factoPage.export());
 			_trace(indent+page.name());
+
 			ArtboardsLoop(cast page.artboards());
 			}
 			
@@ -164,9 +93,13 @@ class BasicExporter
 		builder.down();
 		_trace("ArtboardsLoop");
 		
-		var native=arts.iterator().haxeArray();
-		native.reverse();
+		 var native=arts.iterator().haxeArray();
+		 log("nat="+native);
+		// var native=arts;
+		 native.reverse();
+		//_trace( "artslength"+arts.array());
 
+		//
 		if( config.allArtBoards!=true){
 			if(selection!=null && selection.firstObject()._class()==MSArtboardGroup){
 			processArtboard(cast selection.firstObject());
@@ -210,16 +143,14 @@ class BasicExporter
 			var exported:Exportable=null;
 			var factory=exp.ExportFactory.create(layer);
 			if (factory!=null)exported=factory.export();
-				_trace("------------layer---------------"+layer.name());
+				
 			if(exported!=null){
-				_trace("--------------type-------------"+exported.type);
+				
 			builder.appendChild(exported);
-			_trace("name="+indent+layer.name());
-			_trace( "flat?"+exported.behaviour.has(Flat));
-			_trace( "Sliced?"+exported.behaviour.has(Sliced));
+			
 			
 			if(layer.isGroup() && !exported.behaviour.has(Flat) ){
-				_trace( 'isgroup and not Slice nor Flat');
+			
 				bigloop(layer.layers(),indent);
 			};
 			}
@@ -227,7 +158,7 @@ class BasicExporter
 		}
 
 		builder.up();
-		_trace("end bigloop");
+		
 	}
 
 	
@@ -311,7 +242,7 @@ class BasicExporter
 
 
 	
-	function toJson(tree:TreeNode<Exportable>,obj:Dynamic)
+	public function toJson(tree:TreeNode<Exportable>,obj:Dynamic)
 	{
 		if( obj.children==null)obj.children=[];
 		for (node in tree.childIterator()){
@@ -336,15 +267,16 @@ class BasicExporter
 
 	
 	
-	function exportjson(content:String)
+	public function exportjson(content:String)
 	{
 		Global.writeToFile(content,doc.dir()+"/view/"+doc.displayName()+".json");
 	}
 	
 
 
-	// static public function main()
-	// {
-	// 	var app = new BasicExporter();
-	// }
+	static public function main()
+	{
+		var app = new BasicExporter();
+		app.generate();
+	}
 }
